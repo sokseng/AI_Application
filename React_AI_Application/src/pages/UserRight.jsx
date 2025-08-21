@@ -18,6 +18,7 @@ import UserRightTree from "../components/UserRightTree";
 import { treeData, getDefaultRights, buildNestedObject } from "../utils/rights";
 import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { mergeRights } from "../utils/mergeRights";
+import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 
 const columns = [
   { field: "name", headerName: "Right name", flex: 1 },

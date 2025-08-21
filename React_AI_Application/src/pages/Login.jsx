@@ -12,7 +12,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function LoginPage() {
-    const { setUserRights } = useUserStore.getState();
+    const { setUserRights, setUser } = useUserStore.getState();
     const navigate = useNavigate();
     const [email, setEmail] = useState("sokseng3997@gmail.com");
     const [password, setPassword] = useState("admin123");
@@ -20,7 +20,6 @@ export default function LoginPage() {
     const [errorMsg, setErrorMsg] = useState("");
 
     const handleSubmit = async (e) => {
-        debugger
         e.preventDefault();
         try {
             // Try to get token from localStorage
@@ -38,6 +37,7 @@ export default function LoginPage() {
                     `Bearer ${response.data.access_token}`;
 
                 setUserRights(response.data.rights);// Set user rights global
+                setUser(response.data.user_id);// Set user id global
 
                 navigate("/user");
             }

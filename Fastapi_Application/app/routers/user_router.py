@@ -98,7 +98,8 @@ def create_login(data: UserLogin, db: Session = Depends(get_db)):
 
     return AccessToken(
         access_token=access_token,
-        rights=rights
+        rights=rights,
+        user_id=user.pk_id
     )
 
 # erify token

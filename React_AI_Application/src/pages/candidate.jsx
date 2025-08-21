@@ -5,6 +5,8 @@ import axiosInstanceToken from "../utils/axiosInstanceToken";
 import Paper from "@mui/material/Paper";
 import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { useBottomBar } from "../components/layout/BottomBarContext";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import {
     Button,
     Dialog,
@@ -18,21 +20,31 @@ import {
     Select,
     FormControl,
     InputAdornment,
-    IconButton
+    IconButton,
+    FormHelperText 
 } from "@mui/material";
 
 const columns = [
-    { field: "name", headerName: "Candidate name", flex: 1 }
+    { field: "candidate_name", headerName: "Candidate name", flex: 1 },
+    { field: "email", headerName: "Email", flex: 1 },
+    { field: "phone", headerName: "Phone", flex: 1 },
+    { field: "gender", headerName: "Gender", flex: 1 },
+    { field: "date_of_birth", headerName: "Date of Birth", flex: 1 },
+    { field: "address1", headerName: "Address1", flex: 1 },
+    { field: "address2", headerName: "Address2", flex: 1 }
 ];
 const Candidate = () => {
-
-    const { userRights } = useUserStore();
+    const { userRights, user_id } = useUserStore();
     const [candidateData, setCandidateData] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const { setButtons } = useBottomBar();
     const [selectedRows, setSelectedRows] = useState([]);
     const [formData, setFormData] = useState({});
-    // const [errors, setErrors] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
+    const togglePasswordVisibility = () => setShowPassword((show) => !show);
+    const [errors, setErrors] = useState({});
+    const [rightData, setRightData] = useState([]);
+    const [userRightValue, setUserRightValue] = useState("");
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
         pageSize: 10,
@@ -49,33 +61,53 @@ const Candidate = () => {
 
     const buildButtons = () => {
         const btns = [];
-
         if (userRights?.CandidateRights?.CanAdd) {
             btns.push({
                 label: "Add",
                 onClick: () => handleOpenSave(),
             });
         }
-
         if (userRights?.CandidateRights?.CanDelete) {
             btns.push({
                 label: "Delete",
                 onClick: () => alert("Delete clicked"),
             });
         }
-
         return btns;
+    };
+
+    const fetchUserRightsDropdown = async () => {
+        try {
+            const response = await axiosInstanceToken.get("/user/right_dropdown");
+            setRightData(response.data);
+        } catch (err) {
+            console.err("Failed to fetch right data", err);
+        }
     };
 
 
     useEffect(() => {
         fetchCandidateData();
+        fetchUserRightsDropdown();
         setButtons(buildButtons());// set buttons from function
         return () => setButtons([]);// cleanup when leaving page
     }, [setButtons]);
 
     const handleOpenSave = () => {
-
+        setFormData({
+            pk_id: null,
+            first_name: "",
+            last_name: "",
+            email: "",
+            phone: "",
+            gender: "male",
+            date_of_birth: "",
+            address1: "",
+            address2: "",
+            password: "",
+            confirm_password: ""
+        });
+        setDialogOpen(true);
     }
     const handleEdit = async (params) => {
         const rowData = params.row;
@@ -84,9 +116,95 @@ const Candidate = () => {
         setDialogOpen(true);
     };
 
+    const handleSave = async () => {
+        try {
+            debugger
+            const first_name = formData.first_name;
+            const last_name = formData.last_name;
+            const email = formData.email;
+            const phone = formData.phone;
+            const gender = formData.gender;
+            const date_of_birth = formData.date_of_birth;
+            const address1 = formData.address1;
+            const address2 = formData.address2;
+            const password = formData.password;
+            const confirm_password = formData.confirm_password;
+            const right_id = userRightValue;
+            
+
+            if (first_name === "") {
+                setErrors({ first_name: 'First name is required' });
+                return
+            } else if (last_name === "") {
+                setErrors({ last_name: 'Last name is required' });
+                return
+            } else if (email === "") {
+                setErrors({ email: 'Email is required' });
+                return
+            } else if (password === "") {
+                setErrors({ password: 'Password is required' });
+                return
+            }
+            else if (password !== confirm_password) {
+                setErrors({ confirm_password: 'Password does not match' });
+                return
+            } else if (right_id === "") {
+                setErrors({ user_right: 'User right is required' });
+                return
+            }
+
+            const response = await axiosInstanceToken.post("/candidate", {
+                first_name: first_name,
+                last_name: last_name,
+                email: email,
+                phone: phone,
+                gender: gender,
+                date_of_birth: date_of_birth,
+                address1: address1,
+                address2: address2,
+                password: password,
+                user_id: user_id,
+                right_id: parseInt(userRightValue, 10)
+            });
+            debugger
+            fetchCandidateData();
+            setDialogOpen(false);
+        } catch (err) {
+            console.error("Failed to add user", err);
+        }
+    }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;   //get field name + value
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+
+        // ✅ clear only this field’s error
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
+    }
+
+    const handleChangeUserRight = (event) => {
+        setUserRightValue(event.target.value);
+        setErrors((prev) => ({
+            ...prev,
+            user_right: "",
+        }))
+    };
+
     const rows = (candidateData || []).map((item) => ({
         pk_id: item.pk_id,
-        name: item.name,
+        candidate_name: item.first_name + " " + item.last_name,
+        email: item.email,
+        phone: item.phone,
+        gender: item.gender === "male" ? "Male" : "Female",
+        date_of_birth: item.date_of_birth,
+        address1: item.address1,
+        address2: item.address2
     }));
 
 
@@ -127,6 +245,233 @@ const Candidate = () => {
                     },
                 }}
             />
+
+            {/* Add Right Dialog */}
+            <Dialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        width: 450,
+                        maxWidth: "90%",
+                    },
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: "bold", height: 50 }}>Information</DialogTitle>
+                <DialogContent dividers sx={{ minHeight: 300 }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
+
+                        {/* First + Last name in one row */}
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                margin="dense"
+                                label="First name"
+                                name="first_name"
+                                required
+                                value={formData.first_name}
+                                onChange={handleChange}
+                                error={!!errors.first_name}
+                                helperText={errors.first_name}
+                            />
+
+                            <TextField
+                                fullWidth
+                                size="small"
+                                margin="dense"
+                                label="Last name"
+                                name="last_name"
+                                required
+                                value={formData.last_name}
+                                onChange={handleChange}
+                                error={!!errors.last_name}
+                                helperText={errors.last_name}
+                            />
+                        </Box>
+
+                        {/* Gender + DOB in one row */}
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <TextField
+                                select
+                                fullWidth
+                                size="small"
+                                margin="dense"
+                                label="Gender"
+                                name="gender"
+                                value={formData.gender}
+                                onChange={handleChange}
+                            >
+                                <MenuItem value="male">Male</MenuItem>
+                                <MenuItem value="female">Female</MenuItem>
+                            </TextField>
+
+                            <TextField
+                                fullWidth
+                                size="small"
+                                margin="dense"
+                                label="Date of Birth"
+                                name="date_of_birth"
+                                type="date"
+                                value={formData.date_of_birth}
+                                onChange={handleChange}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+
+                        </Box>
+
+                        {/* Email + Phone in one row */}
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                margin="dense"
+                                label="Email"
+                                name="email"
+                                required
+                                value={formData.email}
+                                onChange={handleChange}
+                                error={!!errors.email}
+                                helperText={errors.email}
+                            />
+
+                            <TextField
+                                fullWidth
+                                size="small"
+                                margin="dense"
+                                label="Phone"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                            />
+                        </Box>
+
+                        {/* Address1 + Address2 in one row */}
+                        <TextField
+                            fullWidth
+                            size="small"
+                            margin="dense"
+                            label="Address1"
+                            name="address1"
+                            value={formData.address1}
+                            onChange={handleChange}
+                        />
+
+                        <TextField
+                            fullWidth
+                            size="small"
+                            margin="dense"
+                            label="Addresss2"
+                            name="address2"
+                            value={formData.address2}
+                            onChange={handleChange}
+                        />
+
+                        {/* Password + Confirm password */}
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                label="Password"
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.password}
+                                onChange={handleChange}
+                                margin="normal"
+                                required
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={togglePasswordVisibility} edge="end">
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                error={!!errors.password}
+                                helperText={errors.password}
+                            />
+
+                            <TextField
+                                fullWidth
+                                size="small"
+                                label="Confirm password"
+                                name="confirm_password"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.confirm_password}
+                                onChange={handleChange}
+                                margin="normal"
+                                required
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={togglePasswordVisibility} edge="end">
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                error={!!errors.confirm_password}
+                                helperText={errors.confirm_password}
+                            />
+                        </Box>
+
+                        {/* rights select dropdown */}
+                        <FormControl
+                            size="small"
+                            variant="outlined"
+                            sx={{ minWidth: 200, height: 40 }}
+                            margin="dense"
+                            error={!!errors.user_right}
+                        >
+                            <InputLabel required id="my-select-label">User right</InputLabel>
+                            <Select
+                                labelId="my-select-label"
+                                id="my-select"
+                                value={userRightValue}
+                                onChange={handleChangeUserRight}
+                                label="User right"
+                                sx={{ height: 40 }}
+                            >
+                                {rightData.map((right) => (
+                                    <MenuItem key={right.pk_id} value={right.pk_id}>
+                                        {right.right_name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            {errors.user_right && (
+                                <FormHelperText>{errors.user_right}</FormHelperText>
+                            )}
+                        </FormControl>
+
+                    </Box>
+                </DialogContent>
+
+
+                <DialogActions>
+                    <Button
+                        onClick={() => setDialogOpen(false)}
+                        color="secondary"
+                        sx={{
+                            border: "1px solid",
+                            borderColor: "secondary.main",
+                            borderRadius: 1,
+                            textTransform: "none",
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={handleSave}
+                    >
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 };

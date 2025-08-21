@@ -77,4 +77,5 @@ class UserResponse(UserBase):
 class AccessToken(BaseModel):
     access_token: str
     rights: Optional[Dict] = None
+    user_id: Optional[int] = None
     

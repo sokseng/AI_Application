@@ -2,13 +2,16 @@ import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./components/routes/AppRoutes";
 import { BottomBarProvider } from "./components/layout/BottomBarContext";
+import { SnackbarProvider } from "./components/shared/SnackbarContext";
 
 function App() {
   return (
     <BrowserRouter>
-      <BottomBarProvider>
-        <AppRoutes />
-      </BottomBarProvider>
+      <SnackbarProvider>
+        <BottomBarProvider>
+          <AppRoutes />
+        </BottomBarProvider>
+      </SnackbarProvider>
     </BrowserRouter>
   );
 }

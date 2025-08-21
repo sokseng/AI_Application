@@ -6,6 +6,7 @@ import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { useBottomBar } from "../components/layout/BottomBarContext";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import {
   Button,
   Dialog,
@@ -19,8 +20,7 @@ import {
   Select,
   FormControl,
   InputAdornment,
-  IconButton,
-  Snackbar, Alert, Slide
+  IconButton
 } from "@mui/material";
 
 const columns = [
@@ -29,10 +29,6 @@ const columns = [
   { field: "role_name", headerName: "Role name", flex: 1 },
   { field: "user_right", headerName: "User right", flex: 1 },
 ];
-
-function SlideTransition(props) {
-  return <Slide {...props} direction="down" />;
-}
 
 const User = () => {
   const { userRights } = useUserStore();
@@ -49,13 +45,12 @@ const User = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { showSnackbar } = useSnackbar();
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const togglePasswordVisibility = () => setShowPassword((show) => !show);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -95,10 +90,6 @@ const User = () => {
     return () => setButtons([]);
   }, [setButtons]);
 
-  const handleCloseSnackbar = (event, reason) => {
-    if (reason === "clickaway") return;
-    setOpenSnackbar(false);
-  };
   const handleOpenSave = () => {
     setFormData({ pk_id: null, user_name: "", email: "", role_id: 0, right_id: 0 });
     setDialogOpen(true);
@@ -123,10 +114,16 @@ const User = () => {
   }
 
   const handleChange = (e) => {
-    const { name, value } = e.target;   // ✅ get field name + value
+    const { name, value } = e.target;   //get field name + value
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+
+    //clear only this field’s error
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
     }));
   }
 
@@ -138,7 +135,30 @@ const User = () => {
       const right_id = parseInt(userRightValue, 10) || 0;
       const password = formData.password;
       const confirm_password = formData.confirmPassword;
-      if (password !== confirm_password) return
+      debugger
+      if (user_name === "") {
+        setErrors({ user_name: 'User name is required' });
+        return
+      } else if (email === "") {
+        setErrors({ email: 'Email is required' });
+        return
+      } else if (password === "" || password === undefined) {
+        setErrors({ password: 'Password is required' });
+        return
+      }else if(confirm_password === "" || confirm_password === undefined) {
+        setErrors({ confirmPassword: 'Confirm password is required' });
+        return
+      }
+       else if (password !== confirm_password) {
+        setErrors({ confirmPassword: 'Password does not match' });
+        return
+      } else if (userRoleValue === "") {
+        setErrors({ userRoleValue: 'User role is required' });
+        return
+      } else if (userRightValue === "") {
+        setErrors({ userRightValue: 'User right is required' });
+        return
+      }
 
       const response = await axiosInstanceToken.post("/user", {
         pk_id: formData.pk_id,
@@ -148,20 +168,34 @@ const User = () => {
         role_id: role_id,
         right_id: right_id
       });
-      fetchUserData();
-      setDialogOpen(false);
-      setSuccessMessage("Saved successfully!");
-      setOpenSnackbar(true);
+
+      if (response.data) {
+        fetchUserData();
+        setDialogOpen(false);
+        showSnackbar("Saved successfully!", "success")
+      }
     } catch (err) {
       console.error("Failed to add user", err);
     }
   }
   const handleChangeUserRole = (event) => {
     setUserRoleValue(event.target.value);
+
+    //clear only this field’s error
+    setErrors((prev) => ({
+      ...prev,
+      userRoleValue: "",
+    }));
   };
 
   const handleChangeUserRight = (event) => {
     setUserRightValue(event.target.value);
+
+    //clear only this field’s error
+    setErrors((prev) => ({
+      ...prev,
+      userRightValue: "",
+    }));
   };
 
   // Map rightsData to DataGrid rows
@@ -214,29 +248,6 @@ const User = () => {
         }}
       />
 
-      {/* snackbarK */}
-      <Snackbar
-        open={openSnackbar}
-        onClose={handleCloseSnackbar}
-        autoHideDuration={3000}
-        TransitionComponent={SlideTransition} // smooth slide down
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="success"
-          variant="filled" // filled style looks nicer
-          sx={{
-            width: "100%",
-            fontWeight: "bold",
-            boxShadow: 3,
-            borderRadius: 2,
-          }}
-        >
-          {successMessage}
-        </Alert>
-      </Snackbar>
-
 
       {/* Add Right Dialog */}
       <Dialog
@@ -258,19 +269,23 @@ const User = () => {
               margin="dense"
               label="User name"
               name="user_name"
+              required
               value={formData.user_name}
               onChange={handleChange}
+              error={!!errors.user_name}
             />
-
 
             <TextField
               size="small"
               margin="dense"
               label="Email"
               name="email"
+              required
               value={formData.email}
               onChange={handleChange}
+              error={!!errors.email}
             />
+
             {!formData.pk_id && (
               <TextField
                 fullWidth
@@ -291,6 +306,7 @@ const User = () => {
                     </InputAdornment>
                   ),
                 }}
+                error={!!errors.password}
               />
             )}
 
@@ -314,6 +330,7 @@ const User = () => {
                     </InputAdornment>
                   ),
                 }}
+                error={!!errors.confirmPassword}
               />
             )}
 
@@ -322,8 +339,9 @@ const User = () => {
               variant="outlined"
               sx={{ minWidth: 200, height: 40 }}
               margin="dense"
+              error={!!errors.userRoleValue}
             >
-              <InputLabel id="my-select-label">User role</InputLabel>
+              <InputLabel required id="my-select-label">User role</InputLabel>
               <Select
                 labelId="my-select-label"
                 id="my-select"
@@ -345,8 +363,9 @@ const User = () => {
               variant="outlined"
               sx={{ minWidth: 200, height: 40 }}
               margin="dense"
+              error={!!errors.userRightValue}
             >
-              <InputLabel id="my-select-label">User right</InputLabel>
+              <InputLabel required id="my-select-label">User right</InputLabel>
               <Select
                 labelId="my-select-label"
                 id="my-select"

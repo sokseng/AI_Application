@@ -54,7 +54,7 @@ def get_all(db: Session):
         .join(UserRight, User.right_id == UserRight.pk_id, isouter=True)
     ).all()
 
-# create new user
+# create or update user
 def create(db: Session, user_data: dict):
     if user_data["pk_id"]:
         db_user = db.query(User).filter(User.pk_id == user_data["pk_id"]).first()
