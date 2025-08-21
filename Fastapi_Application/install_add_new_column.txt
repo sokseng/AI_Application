@@ -1,0 +1,19 @@
+
+#alembic/env.py
+from app.database.session import Base  # your SQLAlchemy Base
+from app.models.user_model import User
+from app.models.cover_letter_model import CoverLetter
+from app.models.audit_trace_model import AuditTrace
+from app.models.candidate_model import Candidate
+
+
+target_metadata = Base.metadata
+#-----------------------------------#
+
+#Install the required driver
+
+pip install psycopg2-binary
+
+alembic revision --autogenerate -m "Add name column to t_user_role"
+alembic upgrade head
+
