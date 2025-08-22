@@ -79,19 +79,34 @@ const User = () => {
     }
   };
 
+  const initButtons = () => {
+    const btns = [];
+
+    btns.push({
+      label: "Add",
+      onClick: () => handleOpenSave(),
+    });
+
+    btns.push({
+      label: "Delete",
+      onClick: () => alert("Delete clicked"),
+    });
+
+    return btns;
+  }
+
   useEffect(() => {
     fetchUserData();
     fetchUserRoleDropdown();
     fetchUserRightsDropdown();
-    setButtons([
-      { label: "Add", onClick: () => handleOpenSave() },
-      { label: "Delete", onClick: () => alert("Delete clicked") },
-    ]);
+    setButtons(initButtons());
     return () => setButtons([]);
   }, [setButtons]);
 
   const handleOpenSave = () => {
-    setFormData({ pk_id: null, user_name: "", email: "", role_id: 0, right_id: 0 });
+    setFormData({ pk_id: null, user_name: "", email: "" });
+    setUserRoleValue("");
+    setUserRightValue("");
     setDialogOpen(true);
   }
   const handleEdit = async (params) => {
@@ -135,27 +150,31 @@ const User = () => {
       const right_id = parseInt(userRightValue, 10) || 0;
       const password = formData.password;
       const confirm_password = formData.confirmPassword;
-      debugger
+
       if (user_name === "") {
         setErrors({ user_name: 'User name is required' });
         return
-      } else if (email === "") {
+      } if (email === "") {
         setErrors({ email: 'Email is required' });
         return
-      } else if (password === "" || password === undefined) {
-        setErrors({ password: 'Password is required' });
-        return
-      }else if(confirm_password === "" || confirm_password === undefined) {
-        setErrors({ confirmPassword: 'Confirm password is required' });
-        return
+      } if (password === "" || password === undefined) {
+        if (formData.pk_id === null) {
+          setErrors({ password: 'Password is required' });
+          return
+        }
+      } if (confirm_password === "" || confirm_password === undefined) {
+        if (formData.pk_id === null) {
+          setErrors({ confirmPassword: 'Confirm password is required' });
+          return
+        }
       }
-       else if (password !== confirm_password) {
+      if (password !== confirm_password) {
         setErrors({ confirmPassword: 'Password does not match' });
         return
-      } else if (userRoleValue === "") {
+      } if (userRoleValue === "") {
         setErrors({ userRoleValue: 'User role is required' });
         return
-      } else if (userRightValue === "") {
+      } if (userRightValue === "") {
         setErrors({ userRightValue: 'User right is required' });
         return
       }
@@ -172,10 +191,16 @@ const User = () => {
       if (response.data) {
         fetchUserData();
         setDialogOpen(false);
-        showSnackbar("Saved successfully!", "success")
+        showSnackbar("Saved successfully!", "success");
       }
     } catch (err) {
       console.error("Failed to add user", err);
+      if (err.response && err.response.status === 400 && err.response.data.detail === "Email already exists") {
+        showSnackbar("Email already exists!", "error");
+        setErrors({ email: 'Email is required' });
+      } else {
+        showSnackbar("Failed to save user!", "error");
+      }
     }
   }
   const handleChangeUserRole = (event) => {
@@ -211,7 +236,7 @@ const User = () => {
 
 
   return (
-    <Paper sx={{ height: 450, width: "100%", padding: 2 }}>
+    <Paper sx={{ height: 460, width: "100%", padding: 2 }}>
       <DataGrid
         rows={rows}
         columns={columns}

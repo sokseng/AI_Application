@@ -7,6 +7,7 @@ import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { useBottomBar } from "../components/layout/BottomBarContext";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import {
     Button,
     Dialog,
@@ -21,7 +22,7 @@ import {
     FormControl,
     InputAdornment,
     IconButton,
-    FormHelperText 
+    FormHelperText
 } from "@mui/material";
 
 const columns = [
@@ -34,7 +35,7 @@ const columns = [
     { field: "address2", headerName: "Address2", flex: 1 }
 ];
 const Candidate = () => {
-    const { userRights, user_id } = useUserStore();
+    const { userRights } = useUserStore();
     const [candidateData, setCandidateData] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const { setButtons } = useBottomBar();
@@ -45,6 +46,7 @@ const Candidate = () => {
     const [errors, setErrors] = useState({});
     const [rightData, setRightData] = useState([]);
     const [userRightValue, setUserRightValue] = useState("");
+    const { showSnackbar } = useSnackbar();
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
         pageSize: 10,
@@ -96,6 +98,7 @@ const Candidate = () => {
     const handleOpenSave = () => {
         setFormData({
             pk_id: null,
+            user_id: null,
             first_name: "",
             last_name: "",
             email: "",
@@ -107,18 +110,32 @@ const Candidate = () => {
             password: "",
             confirm_password: ""
         });
+        setUserRightValue("");
         setDialogOpen(true);
     }
     const handleEdit = async (params) => {
         const rowData = params.row;
         if (!rowData || rowData.id <= 0) return;
-        setFormData(rowData);
+
+        setFormData({
+            pk_id: rowData.pk_id,
+            user_id: rowData.user_id,
+            first_name: rowData.first_name,
+            last_name: rowData.last_name,
+            email: rowData.email,
+            phone: rowData.phone,
+            gender: rowData.gender === "Male" ? "male" : "female",
+            date_of_birth: rowData.date_of_birth,
+            address1: rowData.address1,
+            address2: rowData.address2
+        });
+
+        setUserRightValue(rowData.right_id);
         setDialogOpen(true);
     };
 
     const handleSave = async () => {
         try {
-            debugger
             const first_name = formData.first_name;
             const last_name = formData.last_name;
             const email = formData.email;
@@ -130,30 +147,38 @@ const Candidate = () => {
             const password = formData.password;
             const confirm_password = formData.confirm_password;
             const right_id = userRightValue;
-            
+            const user_id = formData.user_id;
 
             if (first_name === "") {
                 setErrors({ first_name: 'First name is required' });
                 return
-            } else if (last_name === "") {
+            }if (last_name === "") {
                 setErrors({ last_name: 'Last name is required' });
                 return
-            } else if (email === "") {
+            }if (email === "") {
                 setErrors({ email: 'Email is required' });
                 return
-            } else if (password === "") {
-                setErrors({ password: 'Password is required' });
-                return
-            }
-            else if (password !== confirm_password) {
+            }if (password === "" || password === undefined) {
+                if (formData.pk_id === null) {
+                    setErrors({ password: 'Password is required' });
+                    return
+                }
+            }if (confirm_password === "" || confirm_password === undefined) {
+                if (formData.pk_id === null) {
+                    setErrors({ confirm_password: 'Confirm password is required' });
+                    return
+                }
+            }if (password !== confirm_password) {
                 setErrors({ confirm_password: 'Password does not match' });
                 return
-            } else if (right_id === "") {
+            }if (right_id === "" || right_id === undefined) {
                 setErrors({ user_right: 'User right is required' });
                 return
             }
 
             const response = await axiosInstanceToken.post("/candidate", {
+                pk_id: formData.pk_id,
+                user_id: user_id,
                 first_name: first_name,
                 last_name: last_name,
                 email: email,
@@ -162,15 +187,23 @@ const Candidate = () => {
                 date_of_birth: date_of_birth,
                 address1: address1,
                 address2: address2,
-                password: password,
-                user_id: user_id,
+                password: password === undefined ? "" : password,
                 right_id: parseInt(userRightValue, 10)
             });
-            debugger
-            fetchCandidateData();
-            setDialogOpen(false);
+
+            if (response.data) {
+                fetchCandidateData();
+                setDialogOpen(false);
+                showSnackbar("Saved successfully!", "success");
+            }
         } catch (err) {
-            console.error("Failed to add user", err);
+            console.error("Failed to save user", err);
+            if (err.response && err.response.status === 400 && err.response.data.detail === "Email already exists") {
+                showSnackbar("Email already exists", "error");
+                setErrors({ email: 'duplicate' });
+            }else{
+                showSnackbar("Failed to save user", "error");
+            }
         }
     }
 
@@ -181,7 +214,7 @@ const Candidate = () => {
             [name]: value,
         }));
 
-        // ✅ clear only this field’s error
+        //clear only this field’s error
         setErrors((prev) => ({
             ...prev,
             [name]: "",
@@ -198,18 +231,23 @@ const Candidate = () => {
 
     const rows = (candidateData || []).map((item) => ({
         pk_id: item.pk_id,
+        user_id: item.user_id,
+        first_name: item.first_name,
+        last_name: item.last_name,
         candidate_name: item.first_name + " " + item.last_name,
         email: item.email,
         phone: item.phone,
         gender: item.gender === "male" ? "Male" : "Female",
         date_of_birth: item.date_of_birth,
         address1: item.address1,
-        address2: item.address2
+        address2: item.address2,
+        right_id: item.right_id,
+        right_name: item.right_name
     }));
 
 
     return (
-        <Paper sx={{ height: 450, width: "100%", padding: 2 }}>
+        <Paper sx={{ height: 515, width: "100%", padding: 2 }}>
             <DataGrid
                 rows={rows}
                 columns={columns}
@@ -273,7 +311,7 @@ const Candidate = () => {
                                 value={formData.first_name}
                                 onChange={handleChange}
                                 error={!!errors.first_name}
-                                helperText={errors.first_name}
+                                //helperText={errors.first_name}
                             />
 
                             <TextField
@@ -286,7 +324,7 @@ const Candidate = () => {
                                 value={formData.last_name}
                                 onChange={handleChange}
                                 error={!!errors.last_name}
-                                helperText={errors.last_name}
+                                //helperText={errors.last_name}
                             />
                         </Box>
 
@@ -334,7 +372,7 @@ const Candidate = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 error={!!errors.email}
-                                helperText={errors.email}
+                                //helperText={errors.email}
                             />
 
                             <TextField
@@ -370,53 +408,57 @@ const Candidate = () => {
                         />
 
                         {/* Password + Confirm password */}
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="Password"
-                                name="password"
-                                type={showPassword ? "text" : "password"}
-                                value={formData.password}
-                                onChange={handleChange}
-                                margin="normal"
-                                required
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton onClick={togglePasswordVisibility} edge="end">
-                                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                error={!!errors.password}
-                                helperText={errors.password}
-                            />
 
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="Confirm password"
-                                name="confirm_password"
-                                type={showPassword ? "text" : "password"}
-                                value={formData.confirm_password}
-                                onChange={handleChange}
-                                margin="normal"
-                                required
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton onClick={togglePasswordVisibility} edge="end">
-                                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                error={!!errors.confirm_password}
-                                helperText={errors.confirm_password}
-                            />
-                        </Box>
+                        {formData.pk_id === null && (
+                            <Box sx={{ display: "flex", gap: 1 }}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    margin="normal"
+                                    required
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={togglePasswordVisibility} edge="end">
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    error={!!errors.password}
+                                    //helperText={errors.password}
+                                />
+
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Confirm password"
+                                    name="confirm_password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={formData.confirm_password}
+                                    onChange={handleChange}
+                                    margin="normal"
+                                    required
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={togglePasswordVisibility} edge="end">
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    error={!!errors.confirm_password}
+                                    //helperText={errors.confirm_password}
+                                />
+                            </Box>
+                        )}
+
 
                         {/* rights select dropdown */}
                         <FormControl
@@ -441,9 +483,9 @@ const Candidate = () => {
                                     </MenuItem>
                                 ))}
                             </Select>
-                            {errors.user_right && (
+                            {/* {errors.user_right && (
                                 <FormHelperText>{errors.user_right}</FormHelperText>
-                            )}
+                            )} */}
                         </FormControl>
 
                     </Box>

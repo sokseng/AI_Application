@@ -25,8 +25,6 @@ const columns = [
   { field: "description", headerName: "Description", flex: 1 },
 ];
 
-
-
 export default function Role() {
   const { setButtons } = useBottomBar();
   const [rightsData, setRightsData] = useState([]);
@@ -36,11 +34,11 @@ export default function Role() {
   const [tabIndex, setTabIndex] = useState(0);
   const [errors, setErrors] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
+  const { showSnackbar } = useSnackbar();
   const [setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
-
 
   // Fetch rights data
   const fetchUserRights = async () => {
@@ -54,24 +52,37 @@ export default function Role() {
     }
   };
 
+  const initButtons = () => {
+    const btns = [];
+
+    btns.push({
+      label: "Add",
+      onClick: () => handleOpenSave(),
+    });
+
+    btns.push({
+      label: "Delete",
+      onClick: () => alert("Delete clicked"),
+    });
+
+    return btns;
+  }
+
   useEffect(() => {
     fetchUserRights();
-    setButtons([
-      { label: "Add", onClick: () => handleOpenSave() },
-      { label: "Delete", onClick: () => alert("Delete clicked") },
-    ]);
+    setButtons(initButtons());
     return () => setButtons([]);
   }, [setButtons]);
 
   // Handle form change
   const handleChange = (e) => {
-    const { name, value } = e.target;   // ✅ get field name + value
+    const { name, value } = e.target;   //get field name + value
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
-    // ✅ clear only this field’s error
+    //clear only this field’s error
     setErrors((prev) => ({
       ...prev,
       [name]: "",
@@ -85,10 +96,8 @@ export default function Role() {
     setDialogOpen(true);
   };
 
-
   // Handle save
   const handleSave = async () => {
-    debugger
     try {
       if (formData.name === '') {
         setErrors({ name: 'Right name is required' });
@@ -105,11 +114,20 @@ export default function Role() {
         }
       );
 
-      fetchUserRights();
-      setFormData({pk_id: null, name: "", description: "" });
+      if(response.data){
+        fetchUserRights();
+        setDialogOpen(false);
+        showSnackbar("Saved successfully!", "success");
+      }
 
     } catch (err) {
-      console.error("Failed to add right", err);
+      console.error("Failed to save right", err);
+      if(err.response && err.response.status === 400 && err.response.data.detail === "Right name already exists"){
+        showSnackbar("Right name already exists", "error");
+        setErrors({ name: 'duplicate' });
+      }else{
+        showSnackbar("Failed to save right", "error");
+      }
     }
   };
 
@@ -165,10 +183,8 @@ export default function Role() {
     description: item.description
   }));
 
-
-
   return (
-    <Paper sx={{ height: 450, width: "100%", padding: 2 }}>
+    <Paper sx={{ height: 460, width: "100%", padding: 2 }}>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -204,7 +220,6 @@ export default function Role() {
           },
         }}
       />
-
 
       {/* Add Right Dialog */}
       <Dialog
@@ -289,7 +304,7 @@ export default function Role() {
                 value={formData.name}
                 onChange={handleChange}
                 error={!!errors.name}
-                helperText={errors.name}
+                //helperText={errors.name}
               />
               <TextField
                 size="small"

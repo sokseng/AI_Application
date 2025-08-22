@@ -41,7 +41,7 @@ def get_users(db: Session = Depends(get_db), current_user_id: int = Depends(veri
     ]
 
 
-# # create new user
+# # create or update user
 @router.post("/", response_model=UserCreate)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     hashed_password = bcrypt_context.hash(user.password)
@@ -98,8 +98,7 @@ def create_login(data: UserLogin, db: Session = Depends(get_db)):
 
     return AccessToken(
         access_token=access_token,
-        rights=rights,
-        user_id=user.pk_id
+        rights=rights
     )
 
 # erify token

@@ -60,11 +60,28 @@ def create(db: Session, user_data: dict):
         db_user = db.query(User).filter(User.pk_id == user_data["pk_id"]).first()
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check for duplicate email when updating
+        existing_email = db.query(User).filter(
+            User.email == user_data["email"],
+            User.pk_id != user_data["pk_id"]
+        ).first()
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already exists")
+
+        # Update data
         db_user.name = user_data["name"]
         db_user.email = user_data["email"]
         db_user.role_id = user_data["role_id"]
         db_user.right_id = user_data["right_id"]
     else:
+
+        # Check for duplicate email when creating
+        existing_email = db.query(User).filter(User.email == user_data["email"]).first()
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        
+        #add data
         db_user = User(
             name=user_data["name"],
             email=user_data["email"],

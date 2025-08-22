@@ -14,10 +14,13 @@ class CandidateBase(BaseModel):
 
 class CandidateCreate(CandidateBase):
     pk_id: Optional[int] = None
-    user_id: int
+    user_id: Optional[int] = None
     password: str
     right_id: int
 
 class CandidateRead(CandidateBase):
     pk_id: int
+    user_id: int
+    right_id: int
+    right_name: str
     model_config = ConfigDict(from_attributes=True)

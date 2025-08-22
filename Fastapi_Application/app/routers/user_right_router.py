@@ -26,7 +26,7 @@ def get_users(db: Session = Depends(get_db), current_user_id: int = Depends(veri
     # Now the token is verified, and you can access current_user_id
     return user_right_controller.get_all(db)
 
-#create user right
+#create or update user right
 @router.post("/right", response_model=UserRightResponse)
 def create_right(right: UserRightCreate, db: Session = Depends(get_db), current_user_id: int = Depends(verify_access_token)):
     return user_right_controller.create_right(db, right)

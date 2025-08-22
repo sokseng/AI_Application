@@ -1,7 +1,7 @@
 import React from "react";
-import { Box, Typography, Button, Stack } from "@mui/material";
+import { Box, Typography, Stack, Button } from "@mui/material";
 
-const BottomBar = () => {
+const BottomBar = ({ buttons = [] }) => {
   return (
     <Box
       component="footer"
@@ -9,27 +9,27 @@ const BottomBar = () => {
         height: "40px",
         py: 2,
         px: 3,
-        backgroundColor: "#595b5fff",
-        color: "white",
+        //backgroundColor: "#595b5fff",
+        //color: "white",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
       }}
     >
-      {/* Left side - Buttons */}
       <Stack direction="row" spacing={1}>
-        <Button variant="contained" color="primary" size="small">
-          Add
-        </Button>
-        <Button variant="contained" color="warning" size="small">
-          Edit
-        </Button>
-        <Button variant="contained" color="error" size="small">
-          Delete
-        </Button>
+        {buttons.map((btn, index) => (
+          <Button
+            key={index}
+            variant={btn.variant || "contained"}
+            //color={btn.color || "primary"}
+            size="small"
+            onClick={btn.onClick}
+          >
+            {btn.label}
+          </Button>
+        ))}
       </Stack>
 
-      {/* Right side - Copyright */}
       <Typography variant="body2">
         © {new Date().getFullYear()} Your Company Name
       </Typography>

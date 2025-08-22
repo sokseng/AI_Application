@@ -17,17 +17,34 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated = 'auto')
 def get_all(db: Session):
     return db.query(UserRight).order_by(UserRight.name).all()
 
-#create user rights
+#create or update user rights
 def create_right(db: Session, right: UserRightCreate):
     if right.pk_id:
         db_right = db.query(UserRight).filter(UserRight.pk_id == right.pk_id).first()
         if not db_right:
             raise HTTPException(status_code=404, detail="Right not found")
+        
+        # Check for duplicate name when updating
+        existing_name = db.query(UserRight).filter(
+            UserRight.name == right.name, 
+            UserRight.pk_id != right.pk_id
+        ).first()
+        if existing_name:
+            raise HTTPException(status_code=400, detail="Right name already exists")
+
+        # Update data
         db_right.name = right.name
         db_right.description = right.description
         db_right.rights = right.rights
         
     else:
+
+        # Check for duplicate name when creating
+        existing_name = db.query(UserRight).filter(UserRight.name == right.name).first()
+        if existing_name:
+            raise HTTPException(status_code=400, detail="Right name already exists")
+
+        #add data
         db_right = UserRight(
             pk_id=right.pk_id,
             name=right.name,

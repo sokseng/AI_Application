@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import useUserStore from "../store/useUserStore";
+import useUserStore from "../../store/useUserStore";
 import {
   Drawer,
   List,
@@ -21,45 +21,10 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 
 const fullDrawerWidth = 240;
 const collapsedDrawerWidth = 60;
-const { userRights } = useUserStore();
-
-const menuItems = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: <DashboardIcon />,
-  },
-  {
-    label: "Users",
-    href: "/user",
-    icon: <PersonIcon />,
-  },
-  {
-    label: "Candidates",
-    href: "/candidate",
-    icon: <HowToRegIcon />,
-  },
-
-  // {
-  //   label: "Restaurant",
-  //   icon: <RestaurantIcon />,
-  //   children: [
-  //     { label: "Restaurant", href: "/admin/restaurants" },
-  //     { label: "Request", href: "/admin/restaurants/restaurant_request" },
-  //     { label: "Review", href: "/admin/restaurants/restaurants_review" },
-  //   ],
-  // },
-  // {
-  //   label: "Payments",
-  //   icon: <PaymentsIcon />,
-  //   children: [
-  //     { label: "Main", href: "/admin/payments" },
-  //     { label: "Sub Page", href: "/admin/payments/subpage" },
-  //   ],
-  // },
-];
+//const { userRights } = useUserStore();
 
 export default function Sidebar({ isDrawerOpen }) {
+  const { userRights } = useUserStore(); // ✅ hook inside component
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
 
@@ -73,6 +38,25 @@ export default function Sidebar({ isDrawerOpen }) {
   const isSelected = (href) => location.pathname === href;
   const isChildSelected = (children) =>
     children?.some((child) => location.pathname === child.href);
+
+  // Build menuItems inside the component
+  const menuItems = [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: <DashboardIcon />,
+    },
+    {
+      label: "Users",
+      href: "/user",
+      icon: <PersonIcon />,
+    },
+    userRights?.CandidateRights?.CanAccessModule && {
+      label: "Candidates",
+      href: "/candidate",
+      icon: <HowToRegIcon />,
+    },
+  ].filter(Boolean); // remove false/null items
 
   return (
     <Drawer
@@ -103,7 +87,7 @@ export default function Sidebar({ isDrawerOpen }) {
                 sx={{
                   backgroundColor:
                     isSelected(item.href) ||
-                    (item.children && isChildSelected(item.children))
+                      (item.children && isChildSelected(item.children))
                       ? "rgba(255, 255, 255, 0.1)"
                       : "transparent",
                   "&:hover": {
@@ -157,3 +141,4 @@ export default function Sidebar({ isDrawerOpen }) {
     </Drawer>
   );
 }
+

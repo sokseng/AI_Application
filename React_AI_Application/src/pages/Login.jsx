@@ -12,7 +12,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function LoginPage() {
-    const { setUserRights, setUser } = useUserStore.getState();
+    const { setUserRights } = useUserStore.getState();
     const navigate = useNavigate();
     const [email, setEmail] = useState("sokseng3997@gmail.com");
     const [password, setPassword] = useState("admin123");
@@ -30,14 +30,13 @@ export default function LoginPage() {
                 email: email,
                 password: password,
             });
-            debugger
+            
             if (response.data?.access_token) {
                 localStorage.setItem("access_token", response.data.access_token);
                 axiosInstance.defaults.headers.common["Authorization"] =
                     `Bearer ${response.data.access_token}`;
 
                 setUserRights(response.data.rights);// Set user rights global
-                setUser(response.data.user_id);// Set user id global
 
                 navigate("/user");
             }
