@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Paper from "@mui/material/Paper";
+import useUserStore from "../store/useUserStore";
 import {
   Button,
   Dialog,
@@ -26,10 +27,11 @@ const columns = [
 ];
 
 export default function Role() {
+  const { userRights } = useUserStore();
   const { setButtons } = useBottomBar();
   const [rightsData, setRightsData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({pk_id: null, name: "", description: "" });
+  const [formData, setFormData] = useState({ pk_id: null, name: "", description: "" });
   const [rights, setRights] = useState(getDefaultRights(treeData));
   const [tabIndex, setTabIndex] = useState(0);
   const [errors, setErrors] = useState({});
@@ -39,6 +41,10 @@ export default function Role() {
     page: 0,
     pageSize: 10,
   });
+
+  const canAccessAddUserRight = userRights?.UserManagement?.UserRightRights?.CanAdd ?? false;
+  const canAccessEditUserRight = userRights?.UserManagement?.UserRightRights?.CanEdit ?? false;
+  const canAccessDeleteUserRight = userRights?.UserManagement?.UserRightRights?.CanDelete ?? false;
 
   // Fetch rights data
   const fetchUserRights = async () => {
@@ -55,15 +61,19 @@ export default function Role() {
   const initButtons = () => {
     const btns = [];
 
-    btns.push({
-      label: "Add",
-      onClick: () => handleOpenSave(),
-    });
+    if (canAccessAddUserRight) {
+      btns.push({
+        label: "Add",
+        onClick: () => handleOpenSave(),
+      });
+    }
 
-    btns.push({
-      label: "Delete",
-      onClick: () => alert("Delete clicked"),
-    });
+    if (canAccessDeleteUserRight) {
+      btns.push({
+        label: "Delete",
+        onClick: () => alert("Delete clicked"),
+      });
+    }
 
     return btns;
   }
@@ -90,7 +100,7 @@ export default function Role() {
   };
 
   const handleOpenSave = () => {
-    setFormData({pk_id: null, name: "", description: "" });
+    setFormData({ pk_id: null, name: "", description: "" });
     setRights(getDefaultRights(treeData));
     setTabIndex(0);
     setDialogOpen(true);
@@ -104,7 +114,7 @@ export default function Role() {
         return
       }
       const rightsDefault = buildNestedObject(rights);
-      
+
       const response = await axiosInstanceToken.post("/user/right",
         {
           pk_id: formData.pk_id,
@@ -114,7 +124,7 @@ export default function Role() {
         }
       );
 
-      if(response.data){
+      if (response.data) {
         fetchUserRights();
         setDialogOpen(false);
         showSnackbar("Saved successfully!", "success");
@@ -122,26 +132,30 @@ export default function Role() {
 
     } catch (err) {
       console.error("Failed to save right", err);
-      if(err.response && err.response.status === 400 && err.response.data.detail === "Right name already exists"){
+      if (err.response && err.response.status === 400 && err.response.data.detail === "Right name already exists") {
         showSnackbar("Right name already exists", "error");
         setErrors({ name: 'duplicate' });
-      }else{
+      } else {
         showSnackbar("Failed to save right", "error");
       }
     }
   };
 
   const handleEdit = async (params) => {
-    const rowData = params.row;
-    if (!rowData || rowData.id <= 0) return;
-
-    setFormData({
-      pk_id: rowData.pk_id,
-      name: rowData.name,
-      description: rowData.description,
-    });
-
     try {
+      if(!canAccessEditUserRight){
+        showSnackbar("You don't have permission to edit user right", "info");
+        return;
+      }
+      const rowData = params.row;
+      if (!rowData || rowData.id <= 0) return;
+
+      setFormData({
+        pk_id: rowData.pk_id,
+        name: rowData.name,
+        description: rowData.description,
+      });
+
       const response = await axiosInstanceToken.get(`/user/right/${rowData.pk_id}`);
       if (!response.data) return;
       setTabIndex(0);
@@ -304,7 +318,7 @@ export default function Role() {
                 value={formData.name}
                 onChange={handleChange}
                 error={!!errors.name}
-                //helperText={errors.name}
+              //helperText={errors.name}
               />
               <TextField
                 size="small"

@@ -52,6 +52,10 @@ const User = () => {
   });
   const togglePasswordVisibility = () => setShowPassword((show) => !show);
 
+  const canAccessAddUser = userRights?.UserManagement?.UserRights?.CanAdd ?? false;
+  const canAccessEditUser = userRights?.UserManagement?.UserRights?.CanEdit ?? false;
+  const canAccessDeleteUser = userRights?.UserManagement?.UserRights?.CanDelete ?? false;
+
   const fetchUserData = async () => {
     try {
       const response = await axiosInstanceToken.get("/user");
@@ -82,15 +86,19 @@ const User = () => {
   const initButtons = () => {
     const btns = [];
 
-    btns.push({
-      label: "Add",
-      onClick: () => handleOpenSave(),
-    });
+    if (canAccessAddUser) {
+      btns.push({
+        label: "Add",
+        onClick: () => handleOpenSave(),
+      });
+    }
 
-    btns.push({
-      label: "Delete",
-      onClick: () => handleDelete(),
-    });
+    if (canAccessDeleteUser) {
+      btns.push({
+        label: "Delete",
+        onClick: () => handleDelete(),
+      });
+    }
 
     return btns;
   }
@@ -103,10 +111,12 @@ const User = () => {
     return () => setButtons([]);
   }, [setButtons]);
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    if (selectedRows.length === 0) {
+      showSnackbar("No rows selected for deletion!", "warning");
+      return;
+    }
     
-    const selectedIds = Array.from(selectedRows);
-    if (selectedIds.length === 0) return;
   }
 
   const handleOpenSave = () => {
@@ -117,6 +127,10 @@ const User = () => {
   }
   const handleEdit = async (params) => {
     try {
+      if(!canAccessEditUser){
+        showSnackbar("You don't have permission to edit user", "info");
+        return;
+      }
       const rowData = params.row;
       if (!rowData || rowData.pk_id <= 0) return;
 
@@ -250,7 +264,7 @@ const User = () => {
         disableRowSelectionOnClick
         getRowId={(row) => row.pk_id}
         onRowSelectionModelChange={(newSelection) => {
-          setSelectedRows(newSelection.ids || new Set());
+          setSelectedRows(newSelection);
         }}
         onRowDoubleClick={handleEdit}
         density="compact"

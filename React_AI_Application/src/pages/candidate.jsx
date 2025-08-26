@@ -52,6 +52,10 @@ const Candidate = () => {
         pageSize: 10,
     });
 
+    const canAccessCandidateAdd = userRights?.CandidateRights?.CanAdd ?? false;
+    const canAccessCandidateEdit = userRights?.CandidateRights?.CanEdit ?? false;
+    const canAccessCandidateDelete = userRights?.CandidateRights?.CanDelete ?? false;
+
     const fetchCandidateData = async () => {
         try {
             const response = await axiosInstanceToken.get("/candidate");
@@ -63,13 +67,13 @@ const Candidate = () => {
 
     const buildButtons = () => {
         const btns = [];
-        if (userRights?.CandidateRights?.CanAdd) {
+        if (canAccessCandidateAdd) {
             btns.push({
                 label: "Add",
                 onClick: () => handleOpenSave(),
             });
         }
-        if (userRights?.CandidateRights?.CanDelete) {
+        if (canAccessCandidateDelete) {
             btns.push({
                 label: "Delete",
                 onClick: () => alert("Delete clicked"),
@@ -86,7 +90,6 @@ const Candidate = () => {
             console.err("Failed to fetch right data", err);
         }
     };
-
 
     useEffect(() => {
         fetchCandidateData();
@@ -114,24 +117,32 @@ const Candidate = () => {
         setDialogOpen(true);
     }
     const handleEdit = async (params) => {
-        const rowData = params.row;
-        if (!rowData || rowData.id <= 0) return;
+        try {
+            if (!canAccessCandidateEdit) {
+                showSnackbar("You don't have permission to edit candidate", "info");
+                return;
+            }
+            const rowData = params.row;
+            if (!rowData || rowData.id <= 0) return;
 
-        setFormData({
-            pk_id: rowData.pk_id,
-            user_id: rowData.user_id,
-            first_name: rowData.first_name,
-            last_name: rowData.last_name,
-            email: rowData.email,
-            phone: rowData.phone,
-            gender: rowData.gender === "Male" ? "male" : "female",
-            date_of_birth: rowData.date_of_birth,
-            address1: rowData.address1,
-            address2: rowData.address2
-        });
+            setFormData({
+                pk_id: rowData.pk_id,
+                user_id: rowData.user_id,
+                first_name: rowData.first_name,
+                last_name: rowData.last_name,
+                email: rowData.email,
+                phone: rowData.phone,
+                gender: rowData.gender === "Male" ? "male" : "female",
+                date_of_birth: rowData.date_of_birth,
+                address1: rowData.address1,
+                address2: rowData.address2
+            });
 
-        setUserRightValue(rowData.right_id);
-        setDialogOpen(true);
+            setUserRightValue(rowData.right_id);
+            setDialogOpen(true);
+        } catch (err) {
+            console.error("Failed to edit", err);
+        }
     };
 
     const handleSave = async () => {
@@ -152,26 +163,26 @@ const Candidate = () => {
             if (first_name === "") {
                 setErrors({ first_name: 'First name is required' });
                 return
-            }if (last_name === "") {
+            } if (last_name === "") {
                 setErrors({ last_name: 'Last name is required' });
                 return
-            }if (email === "") {
+            } if (email === "") {
                 setErrors({ email: 'Email is required' });
                 return
-            }if (password === "" || password === undefined) {
+            } if (password === "" || password === undefined) {
                 if (formData.pk_id === null) {
                     setErrors({ password: 'Password is required' });
                     return
                 }
-            }if (confirm_password === "" || confirm_password === undefined) {
+            } if (confirm_password === "" || confirm_password === undefined) {
                 if (formData.pk_id === null) {
                     setErrors({ confirm_password: 'Confirm password is required' });
                     return
                 }
-            }if (password !== confirm_password) {
+            } if (password !== confirm_password) {
                 setErrors({ confirm_password: 'Password does not match' });
                 return
-            }if (right_id === "" || right_id === undefined) {
+            } if (right_id === "" || right_id === undefined) {
                 setErrors({ user_right: 'User right is required' });
                 return
             }
@@ -201,7 +212,7 @@ const Candidate = () => {
             if (err.response && err.response.status === 400 && err.response.data.detail === "Email already exists") {
                 showSnackbar("Email already exists", "error");
                 setErrors({ email: 'duplicate' });
-            }else{
+            } else {
                 showSnackbar("Failed to save user", "error");
             }
         }
@@ -311,7 +322,7 @@ const Candidate = () => {
                                 value={formData.first_name}
                                 onChange={handleChange}
                                 error={!!errors.first_name}
-                                //helperText={errors.first_name}
+                            //helperText={errors.first_name}
                             />
 
                             <TextField
@@ -324,7 +335,7 @@ const Candidate = () => {
                                 value={formData.last_name}
                                 onChange={handleChange}
                                 error={!!errors.last_name}
-                                //helperText={errors.last_name}
+                            //helperText={errors.last_name}
                             />
                         </Box>
 
@@ -372,7 +383,7 @@ const Candidate = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 error={!!errors.email}
-                                //helperText={errors.email}
+                            //helperText={errors.email}
                             />
 
                             <TextField
@@ -431,7 +442,7 @@ const Candidate = () => {
                                         ),
                                     }}
                                     error={!!errors.password}
-                                    //helperText={errors.password}
+                                //helperText={errors.password}
                                 />
 
                                 <TextField
@@ -454,7 +465,7 @@ const Candidate = () => {
                                         ),
                                     }}
                                     error={!!errors.confirm_password}
-                                    //helperText={errors.confirm_password}
+                                //helperText={errors.confirm_password}
                                 />
                             </Box>
                         )}
