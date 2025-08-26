@@ -29,11 +29,16 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
 
   const isSelected = (href) => location.pathname === href;
   const isChildSelected = (children) => children?.some((c) => location.pathname === c.href);
+  
+  const canAccessRole = userRights?.UserManagement?.RoleRights?.CanAccessModule ?? false;
+  const canAccessUserRight = userRights?.UserManagement?.UserRightRights?.CanAccessModule ?? false;
+  const canAccessUser = userRights?.UserManagement?.UserRights?.CanAccessModule ?? false;
+  const canAccessCandidate = userRights?.CandidateRights?.CanAccessModule ?? false;
 
   const menuItems = [
     { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
-    { label: "Users", href: "/user", icon: <PersonIcon /> },
-    userRights?.CandidateRights?.CanAccessModule && {
+    (canAccessRole || canAccessUserRight || canAccessUser) && { label: "User management", href: "/user", icon: <PersonIcon /> },
+    canAccessCandidate && {
       label: "Candidates",
       href: "/candidate",
       icon: <HowToRegIcon />,
@@ -75,7 +80,7 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
                 sx={{
                   backgroundColor:
                     isSelected(item.href) ||
-                    (item.children && isChildSelected(item.children))
+                      (item.children && isChildSelected(item.children))
                       ? "rgba(255,255,255,0.1)"
                       : "transparent",
                   "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },

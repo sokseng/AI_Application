@@ -6,13 +6,18 @@ const useUserStore = create(
   persist(
     (set) => ({
       user_id: 0,
-      userRights: {},
+      userRights: null, // make it null so we can detect "not loaded yet"
       setUserRights: (rights) => set({ userRights: rights }),
       setUser: (user) => set({ user_id: user }),
+      hasHydrated: false,
+      setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
-      name: "user-storage",         // localStorage key
-      getStorage: () => localStorage, // where to store
+      name: "user-storage",
+      getStorage: () => localStorage,
+      onRehydrateStorage: () => (state) => {
+        state.setHasHydrated(true); // mark store as ready after rehydration
+      },
     }
   )
 );

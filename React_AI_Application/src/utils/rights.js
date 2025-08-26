@@ -24,6 +24,41 @@ export const treeData = [
   //   ],
   // },
   {
+    label: "User Management",
+    path: "/UserManagement",
+    children: [
+      {
+        label: "Role",
+        path: "/UserManagement/RoleRights",
+        children: [
+          { label: "Can Access Module", path: "/UserManagement/RoleRights/CanAccessModule" },
+        ],
+      },
+      {
+        label: "User Right",
+        path: "/UserManagement/UserRightRights",
+        children: [
+          { label: "Can Access Module", path: "/UserManagement/UserRightRights/CanAccessModule" },
+          { label: "Can Add", path: "/UserManagement/UserRightRights/CanAdd" },
+          { label: "Can Edit", path: "/UserManagement/UserRightRights/CanEdit" },
+          { label: "Can Delete", path: "/UserManagement/UserRightRights/CanDelete" },
+          { label: "Can Export", path: "/UserManagement/UserRightRights/CanExport" },
+        ],
+      },
+      {
+        label: "User",
+        path: "/UserManagement/UserRights",
+        children: [
+          { label: "Can Access Module", path: "/UserManagement/UserRights/CanAccessModule" },
+          { label: "Can Add", path: "/UserManagement/UserRights/CanAdd" },
+          { label: "Can Edit", path: "/UserManagement/UserRights/CanEdit" },
+          { label: "Can Delete", path: "/UserManagement/UserRights/CanDelete" },
+          { label: "Can Export", path: "/UserManagement/UserRights/CanExport" },
+        ],
+      },
+    ],
+  },
+  {
     label: "Candidate",
     path: "/CandidateRights",
     children: [

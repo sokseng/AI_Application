@@ -1,10 +1,10 @@
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Tabs, Tab } from "@mui/material";
 import { styled } from "@mui/system";
 import Role from "./Role";
 import UserRight from "./UserRight";
 import User from "./User";
+import useUserStore from "../store/useUserStore";
 
 // TabPanel for content
 const TabPanel = ({ children, value, index }) => (
@@ -13,7 +13,7 @@ const TabPanel = ({ children, value, index }) => (
     hidden={value !== index}
     sx={{
       flexGrow: 1,
-      height: "calc(100vh - 200px)", // viewport height minus AppBar, Tabs, BottomBar
+      height: "calc(100vh - 200px)",
       overflowY: "auto",
       animation: value === index ? "fadeIn 0.3s ease-in-out" : "none",
       "@keyframes fadeIn": {
@@ -53,7 +53,31 @@ const StyledTab = styled(Tab)({
 });
 
 export default function TabsPage() {
+  const { userRights } = useUserStore();
+
+  // ✅ Check access rights safely
+  const canAccessRole =
+    userRights?.UserManagement?.RoleRights?.CanAccessModule ?? false;
+  const canAccessUserRight =
+    userRights?.UserManagement?.UserRightRights?.CanAccessModule ?? false;
+  const canAccessUser =
+    userRights?.UserManagement?.UserRights?.CanAccessModule ?? false;
+
+  // ✅ Tabs array with access control
+  const tabs = [
+    { label: "Role", component: <Role />, canAccess: canAccessRole },
+    { label: "User Right", component: <UserRight />, canAccess: canAccessUserRight },
+    { label: "User", component: <User />, canAccess: canAccessUser },
+  ].filter((t) => t.canAccess); // remove inaccessible tabs
+
   const [tabIndex, setTabIndex] = useState(0);
+
+  // ✅ Auto-select the first accessible tab
+  useEffect(() => {
+    if (tabs.length > 0) {
+      setTabIndex(0);
+    }
+  }, [canAccessRole, canAccessUserRight, canAccessUser]);
 
   const handleChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -68,9 +92,9 @@ export default function TabsPage() {
         variant="standard"
         TabIndicatorProps={{ style: { display: "none" } }}
       >
-        <StyledTab label="Role" />
-        <StyledTab label="User Right" />
-        <StyledTab label="User" />
+        {tabs.map((tab, index) => (
+          <StyledTab key={index} label={tab.label} />
+        ))}
       </StyledTabs>
 
       {/* Tab content */}
@@ -84,15 +108,11 @@ export default function TabsPage() {
           flexDirection: "column",
         }}
       >
-        <TabPanel value={tabIndex} index={0}>
-          <Role />
-        </TabPanel>
-        <TabPanel value={tabIndex} index={1}>
-          <UserRight />
-        </TabPanel>
-        <TabPanel value={tabIndex} index={2}>
-          <User />
-        </TabPanel>
+        {tabs.map((tab, index) => (
+          <TabPanel key={index} value={tabIndex} index={index}>
+            {tab.component}
+          </TabPanel>
+        ))}
       </Box>
     </Box>
   );

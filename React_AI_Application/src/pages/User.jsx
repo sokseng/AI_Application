@@ -89,7 +89,7 @@ const User = () => {
 
     btns.push({
       label: "Delete",
-      onClick: () => alert("Delete clicked"),
+      onClick: () => handleDelete(),
     });
 
     return btns;
@@ -103,6 +103,12 @@ const User = () => {
     return () => setButtons([]);
   }, [setButtons]);
 
+  const handleDelete = async () => {
+    
+    const selectedIds = Array.from(selectedRows);
+    if (selectedIds.length === 0) return;
+  }
+
   const handleOpenSave = () => {
     setFormData({ pk_id: null, user_name: "", email: "" });
     setUserRoleValue("");
@@ -112,7 +118,7 @@ const User = () => {
   const handleEdit = async (params) => {
     try {
       const rowData = params.row;
-      if (!rowData || rowData.id <= 0) return;
+      if (!rowData || rowData.pk_id <= 0) return;
 
       setFormData({
         pk_id: rowData.pk_id,

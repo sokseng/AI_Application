@@ -35,7 +35,7 @@ export default function LoginPage() {
                 localStorage.setItem("access_token", response.data.access_token);
                 axiosInstance.defaults.headers.common["Authorization"] =
                     `Bearer ${response.data.access_token}`;
-
+                
                 setUserRights(response.data.rights);// Set user rights global
 
                 navigate("/user");

@@ -7,38 +7,18 @@ import AuthGuard from "../../middleware/AuthGuard";
 import TabsPage from "../../pages/TabsPage";
 import Candidate from "../../pages/candidate";
 import useUserStore from "../../store/useUserStore";
-import { Box, CircularProgress, Typography } from "@mui/material";
 
 const AppRoutes = () => {
-  const { userRights, hasHydrated } = useUserStore();
-
-  // Wait until zustand rehydrated from localStorage
-  if (!hasHydrated) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        flexDirection="column"
-      >
-        <CircularProgress />
-        <Typography variant="body1" mt={2}>
-          Loading...
-        </Typography>
-      </Box>
-    );
-  }
-
-  const canAccessCandidate =
-    userRights?.CandidateRights?.CanAccessModule ?? false;
+  // ✅ Call the hook inside the component body
+  const { userRights } = useUserStore();
+  const canAccessCandidate = userRights?.CandidateRights?.CanAccessModule ?? false;
 
   return (
     <Routes>
       {/* login routes */}
       <Route path="/" element={<Login />} />
 
-      {/* dashboard */}
+      {/* dashboard routes */}
       <Route
         path="/dashboard"
         element={
@@ -48,7 +28,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* user management */}
+      {/* user routes */}
       <Route
         path="/user"
         element={
@@ -58,7 +38,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* candidate */}
+      {/* candidate routes */}
       {canAccessCandidate && (
         <Route
           path="/candidate"
@@ -70,7 +50,7 @@ const AppRoutes = () => {
         />
       )}
 
-      {/* order */}
+      {/* order routes */}
       <Route
         path="/order"
         element={
@@ -80,7 +60,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* fallback */}
+      {/* Redirect unknown routes to login */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

@@ -5,6 +5,7 @@ import { styled } from "@mui/system";
 import Role from "./Role";
 import UserRight from "./UserRight";
 import User from "./User";
+import useUserStore from "../store/useUserStore";
 
 // TabPanel for content
 const TabPanel = ({ children, value, index }) => (
@@ -53,11 +54,17 @@ const StyledTab = styled(Tab)({
 });
 
 export default function TabsPage() {
+  const { userRights } = useUserStore();
   const [tabIndex, setTabIndex] = useState(0);
 
   const handleChange = (event, newValue) => {
     setTabIndex(newValue);
   };
+  
+
+  const canAccessRole = userRights?.UserManagement?.RoleRights?.CanAccessModule ?? false;
+  const canAccessUserRight = userRights?.UserManagement?.UserRightRights?.CanAccessModule ?? false;
+  const canAccessUser = userRights?.UserManagement?.UserRights?.CanAccessModule ?? false;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -84,6 +91,7 @@ export default function TabsPage() {
           flexDirection: "column",
         }}
       >
+        
         <TabPanel value={tabIndex} index={0}>
           <Role />
         </TabPanel>
