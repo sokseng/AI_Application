@@ -25,6 +25,9 @@ class UserRightBase(BaseModel):
 class UserRightCreate(UserRightBase):
     pk_id: Optional[int] = None
 
+class DeleteUserRight(BaseModel):
+    ids: List[int]
+    
 class UserRightResponse(UserRightBase):
     pk_id: int
     model_config = ConfigDict(from_attributes=True)
@@ -77,4 +80,8 @@ class UserResponse(UserBase):
 class AccessToken(BaseModel):
     access_token: str
     rights: Optional[Dict] = None
+
+
+class DeleteUser(BaseModel):
+    ids: List[int]
     

@@ -8,6 +8,7 @@ import { useBottomBar } from "../components/layout/BottomBarContext";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
+import { useConfirm } from "../components/shared/ConfirmContext";
 import {
     Button,
     Dialog,
@@ -21,8 +22,7 @@ import {
     Select,
     FormControl,
     InputAdornment,
-    IconButton,
-    //FormHelperText
+    IconButton
 } from "@mui/material";
 
 const columns = [
@@ -36,7 +36,8 @@ const columns = [
 ];
 const Candidate = () => {
     const { userRights } = useUserStore();
-    const [candidateData, setCandidateData] = useState(null);
+    const [candidateData, setCandidateData] = useState([]);
+    const { confirm } = useConfirm();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { setButtons } = useBottomBar();
     const [selectedRows, setSelectedRows] = useState([]);
@@ -49,7 +50,7 @@ const Candidate = () => {
     const { showSnackbar } = useSnackbar();
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
-        pageSize: 10,
+        pageSize: 25,
     });
 
     const canAccessCandidateAdd = userRights?.CandidateRights?.CanAdd ?? false;
@@ -76,7 +77,7 @@ const Candidate = () => {
         if (canAccessCandidateDelete) {
             btns.push({
                 label: "Delete",
-                onClick: () => alert("Delete clicked"),
+                onClick: handleDelete,
             });
         }
         return btns;
@@ -94,9 +95,31 @@ const Candidate = () => {
     useEffect(() => {
         fetchCandidateData();
         fetchUserRightsDropdown();
+    }, []);
+
+    useEffect(() => {
         setButtons(buildButtons());// set buttons from function
         return () => setButtons([]);// cleanup when leaving page
-    }, [setButtons]);
+    }, [setButtons, selectedRows]);
+
+    const handleDelete = async () => {
+        if (selectedRows.length === 0) {
+            showSnackbar("No rows selected for deletion!", "warning");
+            return;
+        }
+
+        confirm(`Are you sure you want to delete ${selectedRows.length} candidate(s)?`, async () => {
+            try {
+                await axiosInstanceToken.post("/candidate/delete", { ids: selectedRows });
+                fetchCandidateData();
+                setSelectedRows([]);
+                showSnackbar("Deleted successfully!", "success");
+            } catch (err) {
+                console.error(err);
+                showSnackbar("Failed to delete candidates!", "error");
+            }
+        });
+    }
 
     const handleOpenSave = () => {
         setFormData({
@@ -265,8 +288,11 @@ const Candidate = () => {
                 checkboxSelection
                 disableRowSelectionOnClick
                 getRowId={(row) => row.pk_id}
-                onRowSelectionModelChange={(newSelection) => {
-                    setSelectedRows(newSelection.ids || new Set());
+                onSelectionModelChange={(newSelection) => {
+                    const numericSelection = newSelection.map(id => Number(id));
+                    setSelectedRows(numericSelection);
+                    console.log("Selected rows:", numericSelection);
+                    console.log(paginationModel);
                 }}
                 onRowDoubleClick={handleEdit}
                 density="compact"

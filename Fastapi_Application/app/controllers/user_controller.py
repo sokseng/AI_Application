@@ -1,6 +1,7 @@
 
 from sqlalchemy.orm import Session
 from app.models.user_model import User, UserSession, UserRole, UserRight
+from app.schemas.user_schema import DeleteUser
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import timedelta, datetime, timezone
@@ -170,3 +171,18 @@ def get_user_right(user_id: int, db: Session):
     if not user.right:
         return {}
     return user.right.rights
+
+#delete user
+def delete(db: Session, data: DeleteUser):
+    if not data.ids:
+        raise HTTPException(status_code=400, detail="No IDs provided for deletion")
+    
+    users = db.query(User).filter(User.pk_id.in_(data.ids)).all()
+    if not users:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Delete all users
+    for user in users:
+        db.delete(user)
+    db.commit()
+    return {"message": "Users deleted successfully"}

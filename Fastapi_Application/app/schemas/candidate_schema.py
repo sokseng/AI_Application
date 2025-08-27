@@ -18,6 +18,9 @@ class CandidateCreate(CandidateBase):
     password: str
     right_id: int
 
+class DeleteCandidate(BaseModel):
+    ids: list[int]
+    
 class CandidateRead(CandidateBase):
     pk_id: int
     user_id: int

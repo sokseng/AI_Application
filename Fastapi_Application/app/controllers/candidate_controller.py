@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.candidate_model import Candidate
 from app.models.user_model import UserRight
 from app.models.user_model import User
-from app.schemas.user_schema import UserRightCreate
-from app.schemas.candidate_schema import CandidateCreate
+from app.schemas.candidate_schema import CandidateCreate, DeleteCandidate
 from passlib.context import CryptContext
 from app.config.settings import settings  # secret + algorithm from env/config
 from fastapi import HTTPException
@@ -132,3 +131,33 @@ def create_or_update_candidate(db: Session, candidate: CandidateCreate):
     db.commit()
     db.refresh(db_candidate)
     return db_candidate
+
+
+#delete candidate
+def delete_candidate(db: Session, data: DeleteCandidate):
+    if not data.ids:
+        raise HTTPException(status_code=400, detail="No IDs provided for deletion")
+    
+    candidates = db.query(Candidate).filter(Candidate.pk_id.in_(data.ids)).all()
+    if not candidates:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    # Collect related user IDs
+    user_ids = [c.user_id for c in candidates if c.user_id]
+
+    users = []
+    if user_ids:
+        users = db.query(User).filter(User.pk_id.in_(user_ids)).all()
+
+    # Delete users first (to avoid FK constraint issues)
+    for user in users:
+        db.delete(user)
+
+    # Delete candidates
+    for candidate in candidates:
+        db.delete(candidate)
+
+    db.commit()
+    
+    return {"message": "Candidates and related users deleted successfully"}
+

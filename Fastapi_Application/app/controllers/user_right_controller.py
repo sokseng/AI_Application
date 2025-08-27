@@ -1,7 +1,7 @@
 
 from sqlalchemy.orm import Session
-from app.models.user_model import UserRight
-from app.schemas.user_schema import UserRightCreate
+from app.models.user_model import UserRight, User
+from app.schemas.user_schema import UserRightCreate, DeleteUserRight
 from passlib.context import CryptContext
 from app.config.settings import settings  # secret + algorithm from env/config
 from fastapi import HTTPException
@@ -60,3 +60,23 @@ def create_right(db: Session, right: UserRightCreate):
 #get right by id
 def get_right_by_id(db: Session, right_id: int):
     return db.query(UserRight.rights).filter(UserRight.pk_id == right_id).scalar()
+
+
+#delete right
+def delete_right(db: Session, data: DeleteUserRight):
+    if not data.ids:
+        raise HTTPException(status_code=400, detail="No IDs provided for deletion")
+    
+    being_used = db.query(User).filter(User.right_id.in_(data.ids)).first()
+    if being_used:
+        raise HTTPException(status_code=400, detail="Right is being used by user")
+
+    rights = db.query(UserRight).filter(UserRight.pk_id.in_(data.ids)).all()
+    if not rights:
+        raise HTTPException(status_code=404, detail="Right not found")
+
+    # Delete all rights
+    for right in rights:
+        db.delete(right)
+    db.commit()
+    return {"message": "Rights deleted successfully"}

@@ -7,6 +7,7 @@ import { useBottomBar } from "../components/layout/BottomBarContext";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
+import { useConfirm } from "../components/shared/ConfirmContext";
 import {
   Button,
   Dialog,
@@ -32,7 +33,8 @@ const columns = [
 
 const User = () => {
   const { userRights } = useUserStore();
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState([]);
+  const { confirm } = useConfirm();
   const [roleData, setRoleData] = useState([]);
   const [rightData, setRightData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -42,13 +44,11 @@ const User = () => {
   const [errors, setErrors] = useState({});
   const [userRoleValue, setUserRoleValue] = useState("");
   const [userRightValue, setUserRightValue] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { showSnackbar } = useSnackbar();
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
-    pageSize: 10,
+    pageSize: 25,
   });
   const togglePasswordVisibility = () => setShowPassword((show) => !show);
 
@@ -59,7 +59,7 @@ const User = () => {
   const fetchUserData = async () => {
     try {
       const response = await axiosInstanceToken.get("/user");
-      setUserData(response.data);
+      setUserData(response.data || []);
     } catch (err) {
       console.err("Failed to fetch user data", err);
     }
@@ -68,7 +68,7 @@ const User = () => {
   const fetchUserRoleDropdown = async () => {
     try {
       const response = await axiosInstanceToken.get("/user/role_dropdown");
-      setRoleData(response.data);
+      setRoleData(response.data || []);
     } catch (err) {
       console.err("Failed to fetch role data", err);
     }
@@ -77,7 +77,7 @@ const User = () => {
   const fetchUserRightsDropdown = async () => {
     try {
       const response = await axiosInstanceToken.get("/user/right_dropdown");
-      setRightData(response.data);
+      setRightData(response.data || []);
     } catch (err) {
       console.err("Failed to fetch right data", err);
     }
@@ -96,7 +96,7 @@ const User = () => {
     if (canAccessDeleteUser) {
       btns.push({
         label: "Delete",
-        onClick: () => handleDelete(),
+        onClick: handleDelete,
       });
     }
 
@@ -107,17 +107,31 @@ const User = () => {
     fetchUserData();
     fetchUserRoleDropdown();
     fetchUserRightsDropdown();
+  }, []);
+
+  useEffect(() => {
     setButtons(initButtons());
     return () => setButtons([]);
-  }, [setButtons]);
+  }, [setButtons, selectedRows]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedRows.length === 0) {
       showSnackbar("No rows selected for deletion!", "warning");
       return;
     }
-    
-  }
+
+    confirm(`Are you sure you want to delete ${selectedRows.length} user(s)?`, async () => {
+      try {
+        await axiosInstanceToken.post("/user/delete", { ids: selectedRows });
+        fetchUserData();
+        setSelectedRows([]);
+        showSnackbar("Deleted successfully!", "success");
+      } catch (err) {
+        console.error(err);
+        showSnackbar("Failed to delete users!", "error");
+      }
+    });
+  };
 
   const handleOpenSave = () => {
     setFormData({ pk_id: null, user_name: "", email: "" });
@@ -127,7 +141,7 @@ const User = () => {
   }
   const handleEdit = async (params) => {
     try {
-      if(!canAccessEditUser){
+      if (!canAccessEditUser) {
         showSnackbar("You don't have permission to edit user", "info");
         return;
       }
@@ -261,10 +275,14 @@ const User = () => {
         rows={rows}
         columns={columns}
         checkboxSelection
-        disableRowSelectionOnClick
+        disableSelectionOnClick
         getRowId={(row) => row.pk_id}
-        onRowSelectionModelChange={(newSelection) => {
-          setSelectedRows(newSelection);
+        selectionModel={selectedRows}
+        onSelectionModelChange={(newSelection) => {
+          const numericSelection = newSelection.map(id => Number(id));
+          setSelectedRows(numericSelection);
+          console.log("Selected rows:", numericSelection);
+          console.log(paginationModel);
         }}
         onRowDoubleClick={handleEdit}
         density="compact"
@@ -274,25 +292,12 @@ const User = () => {
         initialState={{
           pagination: { paginationModel: { page: 0, pageSize: 25 } },
         }}
-
         sx={{
-          // Header container (full width background)
-          [`& .${gridClasses.columnHeaders}`]: {
-            backgroundColor: "#1d2a47ff",
-            color: "#fff",
-          },
-          // Individual column headers
-          [`& .${gridClasses.columnHeader}`]: {
-            backgroundColor: "#1d2a47ff",
-            color: "#fff",
-          },
-          // Checkbox header (if you use checkboxSelection)
-          [`& .${gridClasses.columnHeaderCheckbox}`]: {
-            backgroundColor: "#1d2a47ff",
-          },
+          [`& .${gridClasses.columnHeaders}`]: { backgroundColor: "#1d2a47ff", color: "#fff" },
+          [`& .${gridClasses.columnHeader}`]: { backgroundColor: "#1d2a47ff", color: "#fff" },
+          [`& .${gridClasses.columnHeaderCheckbox}`]: { backgroundColor: "#1d2a47ff" },
         }}
       />
-
 
       {/* Add Right Dialog */}
       <Dialog

@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from app.schemas.user_schema import UserCreate, UserResponse, AccessToken, UserLogin, UserResponseData
+from app.schemas.user_schema import UserCreate, DeleteUser, AccessToken, UserLogin, UserResponseData
 from app.controllers import user_controller
 from app.database.session import SessionLocal
 from passlib.context import CryptContext
@@ -121,3 +121,8 @@ def get_role_dropdown(db: Session = Depends(get_db)):
 @router.get("/right_dropdown")
 def get_right_dropdown(db: Session = Depends(get_db)):
     return user_controller.get_right_dropdown(db)
+
+#delete mutiple users
+@router.post("/delete")
+def delete_users(data: DeleteUser, db: Session = Depends(get_db), current_user_id: int = Depends(verify_access_token)):
+    return user_controller.delete(db, data)

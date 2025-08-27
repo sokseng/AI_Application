@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Paper from "@mui/material/Paper";
 import useUserStore from "../store/useUserStore";
+import { useConfirm } from "../components/shared/ConfirmContext";
 import {
   Button,
   Dialog,
@@ -29,6 +30,7 @@ const columns = [
 export default function Role() {
   const { userRights } = useUserStore();
   const { setButtons } = useBottomBar();
+  const { confirm } = useConfirm();
   const [rightsData, setRightsData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ pk_id: null, name: "", description: "" });
@@ -37,9 +39,9 @@ export default function Role() {
   const [errors, setErrors] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const { showSnackbar } = useSnackbar();
-  const [setPaginationModel] = useState({
+  const [paginationModel, setPaginationModel] = useState({
     page: 0,
-    pageSize: 10,
+    pageSize: 25,
   });
 
   const canAccessAddUserRight = userRights?.UserManagement?.UserRightRights?.CanAdd ?? false;
@@ -51,7 +53,7 @@ export default function Role() {
     try {
       const response = await axiosInstanceToken.get("/user/right");
       if (response.data.length > 0) {
-        setRightsData(response.data);
+        setRightsData(response.data || []);
       }
     } catch (err) {
       console.error("Failed to fetch user right data", err);
@@ -71,7 +73,7 @@ export default function Role() {
     if (canAccessDeleteUserRight) {
       btns.push({
         label: "Delete",
-        onClick: () => alert("Delete clicked"),
+        onClick: handleDelete,
       });
     }
 
@@ -80,9 +82,35 @@ export default function Role() {
 
   useEffect(() => {
     fetchUserRights();
+  })
+
+  useEffect(() => {
     setButtons(initButtons());
     return () => setButtons([]);
-  }, [setButtons]);
+  }, [setButtons, selectedRows]);
+
+  const handleDelete = async () => {
+    if (selectedRows.length === 0) {
+      showSnackbar("No rows selected for deletion!", "warning");
+      return;
+    }
+
+    confirm(`Are you sure you want to delete ${selectedRows.length} user right(s)?`, async () => {
+      try {
+        await axiosInstanceToken.post("/user/right/delete", { ids: selectedRows });
+        fetchUserRights();
+        setSelectedRows([]);
+        showSnackbar("Deleted successfully!", "success");
+      } catch (err) {
+        if (err.response && err.response.status === 400 && err.response.data.detail === "Right is being used by user") {
+          showSnackbar("Right is being used by user", "warning");
+        } else {
+          console.error(err);
+          showSnackbar("Failed to delete user rights!", "error");
+        }
+      }
+    });
+  };
 
   // Handle form change
   const handleChange = (e) => {
@@ -143,7 +171,7 @@ export default function Role() {
 
   const handleEdit = async (params) => {
     try {
-      if(!canAccessEditUserRight){
+      if (!canAccessEditUserRight) {
         showSnackbar("You don't have permission to edit user right", "info");
         return;
       }
@@ -205,8 +233,12 @@ export default function Role() {
         checkboxSelection
         disableRowSelectionOnClick
         getRowId={(row) => row.pk_id}
-        onRowSelectionModelChange={(newSelection) => {
-          setSelectedRows(newSelection.ids || new Set());
+        selectionModel={selectedRows}
+        onSelectionModelChange={(newSelection) => {
+          const numericSelection = newSelection.map(id => Number(id));
+          setSelectedRows(numericSelection);
+          console.log("Selected rows:", numericSelection);
+          console.log(paginationModel);
         }}
         onRowDoubleClick={handleEdit}
         density="compact"

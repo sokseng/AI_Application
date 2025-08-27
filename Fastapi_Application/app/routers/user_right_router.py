@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from app.schemas.user_schema import UserRightResponse, UserRightCreate
+from app.schemas.user_schema import UserRightResponse, UserRightCreate, DeleteUserRight
 from app.controllers import user_right_controller
 from app.database.session import SessionLocal
 from passlib.context import CryptContext
@@ -42,3 +42,8 @@ def get_right_by_id(right_id: int, db: Session = Depends(get_db), current_user_i
     else:
         rights_obj = rights_json
     return {"rights": rights_obj}
+
+#delete user right
+@router.post("/right/delete")
+def delete_right(data: DeleteUserRight, db: Session = Depends(get_db), current_user_id: int = Depends(verify_access_token)):
+    return user_right_controller.delete_right(db, data)

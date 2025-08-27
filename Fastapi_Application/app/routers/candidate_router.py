@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from app.schemas.candidate_schema import CandidateRead, CandidateCreate
+from app.schemas.candidate_schema import CandidateRead, CandidateCreate, DeleteCandidate
 from app.controllers import candidate_controller
 from app.database.session import SessionLocal
 from passlib.context import CryptContext
@@ -29,3 +29,9 @@ def get_all_candidate(db: Session = Depends(get_db), current_user_id: int = Depe
 @router.post("/")
 def create_or_update_candidate(candidate: CandidateCreate, db: Session = Depends(get_db), current_user_id: int = Depends(verify_access_token)):
     return candidate_controller.create_or_update_candidate(db, candidate)
+
+
+#delete candidate
+@router.post("/delete")
+def delete_candidate(data: DeleteCandidate, db: Session = Depends(get_db), current_user_id: int = Depends(verify_access_token)):
+    return candidate_controller.delete_candidate(db, data)
