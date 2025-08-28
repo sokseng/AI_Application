@@ -45,4 +45,4 @@ class User(Base):
     right = relationship("UserRight", back_populates="users")
     sessions = relationship("UserSession", back_populates="user")
     candidates = relationship("Candidate", back_populates="user")
-    cover_letters = relationship("CoverLetter", back_populates="user")
+    #cover_letters = relationship("CoverLetter", back_populates="user")

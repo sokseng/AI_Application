@@ -21,7 +21,7 @@ const BottomBar = ({ buttons = [] }) => {
         ))}
       </Stack>
 
-      <Typography variant="body2">© {new Date().getFullYear()} Your Company Name</Typography>
+      {/* <Typography variant="body2">© {new Date().getFullYear()} Your Company Name</Typography> */}
     </Box>
   );
 };

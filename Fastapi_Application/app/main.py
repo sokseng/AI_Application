@@ -5,6 +5,7 @@ from app.routers import user_router
 from app.routers import user_role_router
 from app.routers import user_right_router
 from app.routers import candidate_router
+from app.routers import cover_letter_router
 
 from app.database.session import Base, engine
 from app.models.audit_trace_model import AuditTrace
@@ -41,3 +42,4 @@ app.include_router(user_router.router)
 app.include_router(user_role_router.router)
 app.include_router(user_right_router.router)
 app.include_router(candidate_router.router)
+app.include_router(cover_letter_router.router)

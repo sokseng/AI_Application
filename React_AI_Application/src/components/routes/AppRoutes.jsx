@@ -1,11 +1,11 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "../../pages/Dashboard";
-import Order from "../../pages/Order";
 import Login from "../../pages/Login";
 import AuthGuard from "../../middleware/AuthGuard";
 import TabsPage from "../../pages/TabsPage";
 import Candidate from "../../pages/candidate";
+import CoverLetter from "../../pages/CoverLetter";
 import useUserStore from "../../store/useUserStore";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
@@ -72,10 +72,10 @@ const AppRoutes = () => {
 
       {/* order */}
       <Route
-        path="/order"
+        path="/cover-letter"
         element={
           <AuthGuard>
-            <Order />
+            <CoverLetter />
           </AuthGuard>
         }
       />

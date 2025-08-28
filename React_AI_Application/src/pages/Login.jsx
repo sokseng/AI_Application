@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import useUserStore from "../store/useUserStore";
 import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
+import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import {
     Box, Button, Container, CssBaseline, TextField,
     Typography, Avatar, Paper, IconButton,
@@ -13,11 +14,11 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function LoginPage() {
     const { setUserRights } = useUserStore.getState();
+    const { showSnackbar } = useSnackbar();
     const navigate = useNavigate();
-    const [email, setEmail] = useState("sokseng3997@gmail.com");
-    const [password, setPassword] = useState("admin123");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [errorMsg, setErrorMsg] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,7 +42,7 @@ export default function LoginPage() {
                 navigate("/user");
             }
         } catch (error) {
-            setErrorMsg(error.response?.data?.detail || "Login failed");
+            showSnackbar("Invalid email or password", "error");
             console.error("Login failed:", error);
         }
     };
@@ -88,12 +89,6 @@ export default function LoginPage() {
                             ),
                         }}
                     />
-
-                    {errorMsg && (
-                        <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                            {errorMsg}
-                        </Typography>
-                    )}
 
                     <Button fullWidth variant="contained" type="submit" sx={{ mt: 2 }}>
                         Sign In

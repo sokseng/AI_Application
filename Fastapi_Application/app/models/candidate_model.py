@@ -15,3 +15,4 @@ class Candidate(Base):
     address2 = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("t_user.pk_id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="candidates")
+    cover_letters = relationship("CoverLetter", back_populates="candidates")

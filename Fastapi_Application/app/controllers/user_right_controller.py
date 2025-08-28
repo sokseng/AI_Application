@@ -64,7 +64,7 @@ def get_right_by_id(db: Session, right_id: int):
 
 #delete right
 def delete_right(db: Session, data: DeleteUserRight):
-    if not data.ids:
+    if not data.ids or len(data.ids) == 0:
         raise HTTPException(status_code=400, detail="No IDs provided for deletion")
     
     being_used = db.query(User).filter(User.right_id.in_(data.ids)).first()

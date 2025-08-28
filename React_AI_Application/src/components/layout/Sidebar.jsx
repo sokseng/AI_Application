@@ -17,6 +17,7 @@ import {
 } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import ArticleIcon from '@mui/icons-material/Article';
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth, collapsedWidth }) {
@@ -43,6 +44,7 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
       href: "/candidate",
       icon: <HowToRegIcon />,
     },
+    { label: "Cover letter", href: "/cover-letter", icon: <ArticleIcon /> },
   ].filter(Boolean);
 
   const variant = isMobile ? "temporary" : "permanent";

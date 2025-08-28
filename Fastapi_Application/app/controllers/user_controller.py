@@ -174,7 +174,7 @@ def get_user_right(user_id: int, db: Session):
 
 #delete user
 def delete(db: Session, data: DeleteUser):
-    if not data.ids:
+    if not data.ids or len(data.ids) == 0:
         raise HTTPException(status_code=400, detail="No IDs provided for deletion")
     
     users = db.query(User).filter(User.pk_id.in_(data.ids)).all()
