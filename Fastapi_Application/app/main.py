@@ -6,12 +6,14 @@ from app.routers import user_role_router
 from app.routers import user_right_router
 from app.routers import candidate_router
 from app.routers import cover_letter_router
+from app.routers import forgot_password_router
 
 from app.database.session import Base, engine
 from app.models.audit_trace_model import AuditTrace
 from app.models.candidate_model import Candidate
 from app.models.cover_letter_model import CoverLetter
 from app.models.user_model import User
+from app.models.forgot_password_model import ForgotPassword
 # import other models similarly...
 
 def create_tables():
@@ -43,3 +45,4 @@ app.include_router(user_role_router.router)
 app.include_router(user_right_router.router)
 app.include_router(candidate_router.router)
 app.include_router(cover_letter_router.router)
+app.include_router(forgot_password_router.router)

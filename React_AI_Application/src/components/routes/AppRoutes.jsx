@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "../../pages/Dashboard";
 import Login from "../../pages/Login";
+import ForgotPassword from "../../pages/ForgotPassword";
 import AuthGuard from "../../middleware/AuthGuard";
 import TabsPage from "../../pages/TabsPage";
 import Candidate from "../../pages/candidate";
@@ -37,6 +38,7 @@ const AppRoutes = () => {
     <Routes>
       {/* login routes */}
       <Route path="/" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* dashboard */}
       <Route

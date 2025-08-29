@@ -6,7 +6,7 @@ import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import {
     Box, Button, Container, CssBaseline, TextField,
     Typography, Avatar, Paper, IconButton,
-    InputAdornment
+    InputAdornment, Link
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
@@ -19,6 +19,7 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const togglePasswordVisibility = () => setShowPassword((show) => !show);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -47,7 +48,10 @@ export default function LoginPage() {
         }
     };
 
-    const togglePasswordVisibility = () => setShowPassword((show) => !show);
+
+    const handleForgotPassword = () => {
+        navigate('/forgot-password');
+    };
 
     return (
         <Container maxWidth="xs" component="main">
@@ -64,6 +68,7 @@ export default function LoginPage() {
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: "100%" }}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -73,6 +78,7 @@ export default function LoginPage() {
 
                     <TextField
                         fullWidth
+                        size="small"
                         label="Password"
                         type={showPassword ? "text" : "password"}
                         value={password}
@@ -93,6 +99,12 @@ export default function LoginPage() {
                     <Button fullWidth variant="contained" type="submit" sx={{ mt: 2 }}>
                         Sign In
                     </Button>
+
+                    <Box display="flex" justifyContent="flex-end" sx={{ mt: 1 }}>
+                        <Link component="button" variant="body2" onClick={handleForgotPassword}>
+                            Forgot password?
+                        </Link>
+                    </Box>
                 </Box>
             </Paper>
         </Container>
