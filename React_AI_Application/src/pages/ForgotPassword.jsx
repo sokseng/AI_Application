@@ -1,4 +1,4 @@
-// src/pages/ForgotPassword.jsx
+
 import React, { useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import Visibility from "@mui/icons-material/Visibility";
@@ -17,7 +17,7 @@ import {
     IconButton,
     InputAdornment
 } from "@mui/material";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { ArrowBack } from "@mui/icons-material";
 
 const ForgotPassword = () => {
     const [step, setStep] = useState(0);

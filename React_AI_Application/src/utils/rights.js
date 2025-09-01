@@ -69,6 +69,17 @@ export const treeData = [
       { label: "Can Export", path: "/CandidateRights/CanExport" },
     ],
   },
+  {
+    label: "Cover letter",
+    path: "/CoverLetterRights",
+    children: [
+      { label: "Can Access Module", path: "/CoverLetterRights/CanAccessModule" },
+      { label: "Can Add", path: "/CoverLetterRights/CanAdd" },
+      { label: "Can Edit", path: "/CoverLetterRights/CanEdit" },
+      { label: "Can Delete", path: "/CoverLetterRights/CanDelete" },
+      { label: "Can Export", path: "/CoverLetterRights/CanExport" },
+    ]
+  },
 ];
 
 // Generate default rights state (flat object)

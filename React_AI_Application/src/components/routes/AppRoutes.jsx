@@ -7,6 +7,7 @@ import AuthGuard from "../../middleware/AuthGuard";
 import TabsPage from "../../pages/TabsPage";
 import Candidate from "../../pages/candidate";
 import CoverLetter from "../../pages/CoverLetter";
+import SystemParamenter from "../../pages/SystemParamenter";
 import useUserStore from "../../store/useUserStore";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
@@ -31,8 +32,11 @@ const AppRoutes = () => {
     );
   }
 
-  const canAccessCandidate =
-    userRights?.CandidateRights?.CanAccessModule ?? false;
+  const canAccessCandidate = userRights?.CandidateRights?.CanAccessModule ?? false;
+  const canAccessCoverLetter = userRights?.CoverLetterRights?.CanAccessModule ?? false;
+  const canAccessRole = userRights?.UserManagement?.RoleRights?.CanAccessModule ?? false;
+  const canAccessUserRight = userRights?.UserManagement?.UserRightRights?.CanAccessModule ?? false;
+  const canAccessUser = userRights?.UserManagement?.UserRights?.CanAccessModule ?? false;
 
   return (
     <Routes>
@@ -51,14 +55,17 @@ const AppRoutes = () => {
       />
 
       {/* user management */}
-      <Route
-        path="/user"
-        element={
-          <AuthGuard>
-            <TabsPage />
-          </AuthGuard>
-        }
-      />
+      {(canAccessRole || canAccessUserRight || canAccessUser) && (
+        <Route
+          path="/user"
+          element={
+            <AuthGuard>
+              <TabsPage />
+            </AuthGuard>
+          }
+        />
+      )}
+
 
       {/* candidate */}
       {canAccessCandidate && (
@@ -72,12 +79,24 @@ const AppRoutes = () => {
         />
       )}
 
-      {/* order */}
+      {/* cover letter */}
+      {canAccessCoverLetter && (
+        <Route
+          path="/cover-letter"
+          element={
+            <AuthGuard>
+              <CoverLetter />
+            </AuthGuard>
+          }
+        />
+      )}
+
+      {/* system paramenter */}
       <Route
-        path="/cover-letter"
+        path="/system-parameter"
         element={
           <AuthGuard>
-            <CoverLetter />
+            <SystemParamenter />
           </AuthGuard>
         }
       />

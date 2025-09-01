@@ -18,6 +18,7 @@ import {
 import PersonIcon from "@mui/icons-material/Person";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ArticleIcon from '@mui/icons-material/Article';
+import SettingsIcon from "@mui/icons-material/Settings";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth, collapsedWidth }) {
@@ -35,16 +36,35 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
   const canAccessUserRight = userRights?.UserManagement?.UserRightRights?.CanAccessModule ?? false;
   const canAccessUser = userRights?.UserManagement?.UserRights?.CanAccessModule ?? false;
   const canAccessCandidate = userRights?.CandidateRights?.CanAccessModule ?? false;
+  const canAccessCoverLetter = userRights?.CoverLetterRights?.CanAccessModule ?? false;
 
   const menuItems = [
+    // dashboard menu
     { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
+    
+    // user management menu
     (canAccessRole || canAccessUserRight || canAccessUser) && { label: "User management", href: "/user", icon: <PersonIcon /> },
+    
+    // candidate menu
     canAccessCandidate && {
       label: "Candidates",
       href: "/candidate",
       icon: <HowToRegIcon />,
     },
+
+    // cover letter menu
+    canAccessCoverLetter &&
     { label: "Cover letter", href: "/cover-letter", icon: <ArticleIcon /> },
+
+    // settings menu
+    {
+    label: "Settings",
+    icon: <SettingsIcon />,
+    children: [
+      { label: "System parameter", href: "/system-parameter" },
+    ],
+  },
+
   ].filter(Boolean);
 
   const variant = isMobile ? "temporary" : "permanent";
@@ -106,11 +126,12 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
               <Collapse in={openMenus[item.label]} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   {item.children.map((child) => (
-                    <ListItem key={child.label} disablePadding sx={{ pl: 4 }}>
+                    <ListItem key={child.label} disablePadding sx={{ pl: 4, pt: 0.2 }}>
                       <ListItemButton
                         component={Link}
                         to={child.href}
                         sx={{
+                          borderRadius: "5px",
                           backgroundColor: isSelected(child.href)
                             ? "rgba(255,255,255,0.1)"
                             : "transparent",

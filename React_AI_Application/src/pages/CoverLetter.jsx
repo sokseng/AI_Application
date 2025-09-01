@@ -43,18 +43,26 @@ const CoverLetter = () => {
     const [selectedRows, setSelectedRows] = useState([]);
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 25 });
 
+    const canAccessAddCV = userRights?.CoverLetterRights?.CanAdd ?? false;
+    const canAccessEditCV = userRights?.CoverLetterRights?.CanEdit ?? false;
+    const canAccessDeleteCV = userRights?.CoverLetterRights?.CanDelete ?? false;
+
     const initButtons = () => {
         const btns = [];
 
-        btns.push({
-            label: "Add",
-            onClick: () => handleOpenSave(),
-        });
+        if (canAccessAddCV) {
+            btns.push({
+                label: "Add",
+                onClick: () => handleOpenSave(),
+            });
+        }
 
-        btns.push({
-            label: "Delete",
-            onClick: handleDelete,
-        });
+        if (canAccessDeleteCV) {
+            btns.push({
+                label: "Delete",
+                onClick: handleDelete,
+            });
+        }
 
         return btns;
     }
@@ -140,7 +148,12 @@ const CoverLetter = () => {
         });
     }
     const handleEdit = (params) => {
-        const rowData = params.row;
+        if(!canAccessEditCV) {
+            showSnackbar("You don't have permission to edit cover letter", "info");
+            return;
+        }
+        try {
+            const rowData = params.row;
         if (!rowData || rowData.pk_id <= 0) return;
         setFormData({
             pk_id: rowData.pk_id,
@@ -149,6 +162,9 @@ const CoverLetter = () => {
         })
         setCandidateValue(rowData.fk_candidate);
         setDialogOpen(true);
+        }catch (err) {
+            console.error("Failed to edit", err);
+        }
     };
 
     const handleChangeCandidate = (event) => {
