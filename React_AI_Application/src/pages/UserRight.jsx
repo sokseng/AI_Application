@@ -226,7 +226,7 @@ export default function Role() {
   }));
 
   return (
-    <Paper sx={{ height: 460, width: "100%", padding: 2 }}>
+    <Paper sx={{ height: 460, width: "100%", padding: 0 }}>
       <DataGrid
         rows={rows}
         columns={columns}
