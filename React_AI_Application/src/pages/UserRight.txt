@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Paper from "@mui/material/Paper";
 import useUserStore from "../store/useUserStore";
 import { useConfirm } from "../components/shared/ConfirmContext";
@@ -39,14 +39,17 @@ export default function Role() {
   const [errors, setErrors] = useState({});
   const [selectedRows, setSelectedRows] = useState([]);
   const { showSnackbar } = useSnackbar();
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 25 });
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 25,
+  });
 
   const canAccessAddUserRight = userRights?.UserManagement?.UserRightRights?.CanAdd ?? false;
   const canAccessEditUserRight = userRights?.UserManagement?.UserRightRights?.CanEdit ?? false;
   const canAccessDeleteUserRight = userRights?.UserManagement?.UserRightRights?.CanDelete ?? false;
 
   // Fetch rights data
-  const fetchUserRights = useCallback(async () => {
+  const fetchUserRights = async () => {
     try {
       const response = await axiosInstanceToken.get("/user/right");
       if (response.data.length > 0) {
@@ -55,16 +58,31 @@ export default function Role() {
     } catch (err) {
       console.error("Failed to fetch user right data", err);
     }
-  }, []);
+  };
 
-  const handleOpenSave = useCallback(() => {
-    setFormData({ pk_id: null, name: "", description: "" });
-    setRights(getDefaultRights(treeData));
-    setTabIndex(0);
-    setDialogOpen(true);
-  }, []);
+  const initButtons = () => {
+    const btns = [];
 
-  const handleDelete = useCallback(async () => {
+    if (canAccessAddUserRight) {
+      btns.push({
+        label: "Add",
+        onClick: () => handleOpenSave(),
+      });
+    }
+
+    if (canAccessDeleteUserRight) {
+      btns.push({
+        label: "Delete",
+        onClick: handleDelete,
+      });
+    }
+
+    return btns;
+  }
+
+  
+
+  const handleDelete = async () => {
     if (selectedRows.length === 0) {
       showSnackbar("No rows selected for deletion!", "warning");
       return;
@@ -85,27 +103,7 @@ export default function Role() {
         }
       }
     });
-  }, [selectedRows, confirm, fetchUserRights, showSnackbar]);
-
-  const initButtons = useCallback(() => {
-    const btns = [];
-
-    if (canAccessAddUserRight) {
-      btns.push({
-        label: "Add",
-        onClick: handleOpenSave,
-      });
-    }
-
-    if (canAccessDeleteUserRight) {
-      btns.push({
-        label: "Delete",
-        onClick: handleDelete,
-      });
-    }
-
-    return btns;
-  }, [canAccessAddUserRight, canAccessDeleteUserRight, handleOpenSave, handleDelete]);
+  };
 
   // Handle form change
   const handleChange = (e) => {
@@ -122,6 +120,12 @@ export default function Role() {
     }));
   };
 
+  const handleOpenSave = () => {
+    setFormData({ pk_id: null, name: "", description: "" });
+    setRights(getDefaultRights(treeData));
+    setTabIndex(0);
+    setDialogOpen(true);
+  };
 
   // Handle save
   const handleSave = async () => {
@@ -206,15 +210,6 @@ export default function Role() {
 
     setDialogOpen(true);
   };
-
-  useEffect(() => {
-    fetchUserRights();
-  }, [fetchUserRights]);
-
-  useEffect(() => {
-    setButtons(initButtons());
-    return () => setButtons([]);
-  }, [setButtons, initButtons]);
 
   // Map rightsData to DataGrid rows
   const rows = rightsData.map((item) => ({

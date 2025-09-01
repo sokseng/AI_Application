@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import useUserStore from "../store/useUserStore";
 import axiosInstanceToken from "../utils/axiosInstanceToken";
 import Paper from "@mui/material/Paper";
@@ -56,65 +56,34 @@ const User = () => {
   const canAccessEditUser = userRights?.UserManagement?.UserRights?.CanEdit ?? false;
   const canAccessDeleteUser = userRights?.UserManagement?.UserRights?.CanDelete ?? false;
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const response = await axiosInstanceToken.get("/user");
       setUserData(response.data || []);
     } catch (err) {
       console.err("Failed to fetch user data", err);
     }
-  };
+  }, []);
 
-  const fetchUserRoleDropdown = async () => {
+  const fetchUserRoleDropdown = useCallback(async () => {
     try {
       const response = await axiosInstanceToken.get("/user/role_dropdown");
       setRoleData(response.data || []);
     } catch (err) {
       console.err("Failed to fetch role data", err);
     }
-  };
+  }, []);
 
-  const fetchUserRightsDropdown = async () => {
+  const fetchUserRightsDropdown = useCallback(async () => {
     try {
       const response = await axiosInstanceToken.get("/user/right_dropdown");
       setRightData(response.data || []);
     } catch (err) {
       console.err("Failed to fetch right data", err);
     }
-  };
-
-  const initButtons = () => {
-    const btns = [];
-
-    if (canAccessAddUser) {
-      btns.push({
-        label: "Add",
-        onClick: () => handleOpenSave(),
-      });
-    }
-
-    if (canAccessDeleteUser) {
-      btns.push({
-        label: "Delete",
-        onClick: handleDelete,
-      });
-    }
-
-    return btns;
-  }
-
-  useEffect(() => {
-    fetchUserData();
-    fetchUserRoleDropdown();
-    fetchUserRightsDropdown();
   }, []);
 
-  useEffect(() => {
-    setButtons(initButtons());
-    return () => setButtons([]);
-  }, [setButtons, selectedRows]);
-
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (selectedRows.length === 0) {
       showSnackbar("No rows selected for deletion!", "warning");
       return;
@@ -131,14 +100,35 @@ const User = () => {
         showSnackbar("Failed to delete users!", "error");
       }
     });
-  };
+  }, [confirm, selectedRows, fetchUserData, showSnackbar]);
 
-  const handleOpenSave = () => {
+  const handleOpenSave = useCallback(() => {
     setFormData({ pk_id: null, user_name: "", email: "" });
     setUserRoleValue("");
     setUserRightValue("");
     setDialogOpen(true);
-  }
+  }, []);
+
+  const initButtons = useCallback(() => {
+    const btns = [];
+
+    if (canAccessAddUser) {
+      btns.push({
+        label: "Add",
+        onClick: handleOpenSave,
+      });
+    }
+
+    if (canAccessDeleteUser) {
+      btns.push({
+        label: "Delete",
+        onClick: handleDelete,
+      });
+    }
+
+    return btns;
+  }, [canAccessAddUser, canAccessDeleteUser, handleOpenSave, handleDelete]);
+  
   const handleEdit = async (params) => {
     try {
       if (!canAccessEditUser) {
@@ -256,6 +246,17 @@ const User = () => {
       userRightValue: "",
     }));
   };
+
+  useEffect(() => {
+    fetchUserData();
+    fetchUserRoleDropdown();
+    fetchUserRightsDropdown();
+  }, [fetchUserData, fetchUserRoleDropdown, fetchUserRightsDropdown]);
+
+  useEffect(() => {
+    setButtons(initButtons());
+    return () => setButtons([]);
+  }, [setButtons, initButtons]);
 
   // Map rightsData to DataGrid rows
   const rows = (userData || []).map((item) => ({

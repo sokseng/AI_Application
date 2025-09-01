@@ -14,10 +14,7 @@ const columns = [
 export default function Role() {
   const [roleData, setRoleData] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
+  const [paginationModel, setPaginationModel] = useState({page: 0, pageSize: 10});
 
   const fetchUserRoles = async () => {
     try {
@@ -51,6 +48,8 @@ export default function Role() {
         getRowId={(row) => row.id}
         onRowSelectionModelChange={(newSelection) => {
           setSelectedRows(newSelection.ids || new Set());
+          console.log(selectedRows);
+          console.log(paginationModel);
         }}
         //onRowDoubleClick={handleEdit}
         density="compact"

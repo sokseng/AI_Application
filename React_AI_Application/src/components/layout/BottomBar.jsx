@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Stack, Button } from "@mui/material";
+import { Box, Stack, Button } from "@mui/material";
 
 const BottomBar = ({ buttons = [] }) => {
   return (

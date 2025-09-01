@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import useUserStore from "../store/useUserStore";
 import axiosInstanceToken from "../utils/axiosInstanceToken";
 import Paper from "@mui/material/Paper";
@@ -57,52 +57,16 @@ const Candidate = () => {
     const canAccessCandidateEdit = userRights?.CandidateRights?.CanEdit ?? false;
     const canAccessCandidateDelete = userRights?.CandidateRights?.CanDelete ?? false;
 
-    const fetchCandidateData = async () => {
+    const fetchCandidateData = useCallback(async () => {
         try {
             const response = await axiosInstanceToken.get("/candidate");
             setCandidateData(response.data);
         } catch (err) {
             console.err("Failed to fetch candidate data", err);
         }
-    }
-
-    const buildButtons = () => {
-        const btns = [];
-        if (canAccessCandidateAdd) {
-            btns.push({
-                label: "Add",
-                onClick: () => handleOpenSave(),
-            });
-        }
-        if (canAccessCandidateDelete) {
-            btns.push({
-                label: "Delete",
-                onClick: handleDelete,
-            });
-        }
-        return btns;
-    };
-
-    const fetchUserRightsDropdown = async () => {
-        try {
-            const response = await axiosInstanceToken.get("/user/right_dropdown");
-            setRightData(response.data);
-        } catch (err) {
-            console.err("Failed to fetch right data", err);
-        }
-    };
-
-    useEffect(() => {
-        fetchCandidateData();
-        fetchUserRightsDropdown();
     }, []);
 
-    useEffect(() => {
-        setButtons(buildButtons());// set buttons from function
-        return () => setButtons([]);// cleanup when leaving page
-    }, [setButtons, selectedRows]);
-
-    const handleDelete = async () => {
+    const handleDelete = useCallback(() => {
         if (selectedRows.length === 0) {
             showSnackbar("No rows selected for deletion!", "warning");
             return;
@@ -119,9 +83,9 @@ const Candidate = () => {
                 showSnackbar("Failed to delete candidates!", "error");
             }
         });
-    }
+    }, [confirm, fetchCandidateData, selectedRows, showSnackbar]);
 
-    const handleOpenSave = () => {
+    const handleOpenSave = useCallback(() => {
         setFormData({
             pk_id: null,
             user_id: null,
@@ -138,7 +102,35 @@ const Candidate = () => {
         });
         setUserRightValue("");
         setDialogOpen(true);
-    }
+    }, []);
+
+    const buildButtons = useCallback(() => {
+        const btns = [];
+        if (canAccessCandidateAdd) {
+            btns.push({
+                label: "Add",
+                onClick: handleOpenSave,
+            });
+        }
+        if (canAccessCandidateDelete) {
+            btns.push({
+                label: "Delete",
+                onClick: handleDelete,
+            });
+        }
+        return btns;
+    }, [canAccessCandidateAdd, canAccessCandidateDelete, handleDelete, handleOpenSave]);
+
+    const fetchUserRightsDropdown = useCallback(async () => {
+        try {
+            const response = await axiosInstanceToken.get("/user/right_dropdown");
+            setRightData(response.data);
+        } catch (err) {
+            console.err("Failed to fetch right data", err);
+        }
+    }, []);
+
+
     const handleEdit = async (params) => {
         try {
             if (!canAccessCandidateEdit) {
@@ -262,6 +254,16 @@ const Candidate = () => {
             user_right: "",
         }))
     };
+
+    useEffect(() => {
+        fetchCandidateData();
+        fetchUserRightsDropdown();
+    }, [fetchCandidateData, fetchUserRightsDropdown]);
+
+    useEffect(() => {
+        setButtons(buildButtons());// set buttons from function
+        return () => setButtons([]);// cleanup when leaving page
+    }, [setButtons, buildButtons]);
 
     const rows = (candidateData || []).map((item) => ({
         pk_id: item.pk_id,

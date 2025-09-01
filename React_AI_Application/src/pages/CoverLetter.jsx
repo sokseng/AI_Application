@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import useUserStore from "../store/useUserStore";
 import axiosInstanceToken from "../utils/axiosInstanceToken";
 import Paper from "@mui/material/Paper";
@@ -18,9 +18,7 @@ import {
     MenuItem,
     Box,
     Select,
-    FormControl,
-    InputAdornment,
-    IconButton
+    FormControl
 } from "@mui/material";
 
 const columns = [
@@ -47,89 +45,31 @@ const CoverLetter = () => {
     const canAccessEditCV = userRights?.CoverLetterRights?.CanEdit ?? false;
     const canAccessDeleteCV = userRights?.CoverLetterRights?.CanDelete ?? false;
 
-    const initButtons = () => {
-        const btns = [];
-
-        if (canAccessAddCV) {
-            btns.push({
-                label: "Add",
-                onClick: () => handleOpenSave(),
-            });
-        }
-
-        if (canAccessDeleteCV) {
-            btns.push({
-                label: "Delete",
-                onClick: handleDelete,
-            });
-        }
-
-        return btns;
-    }
-
-    const fetchCandidateData = async () => {
+    const fetchCandidateData = useCallback(async () => {
         try {
             const response = await axiosInstanceToken.get("/cover_letter/candidate_dropdown");
             setCandidateData(response.data || []);
         } catch (err) {
             console.log("Failed to fetch candidate data", err);
         }
-    }
+    },[]);
 
-    const fetchCoverLetterData = async () => {
+    const fetchCoverLetterData = useCallback(async () => {
         try {
             const response = await axiosInstanceToken.get("/cover_letter");
             setCoverLetterData(response.data || []);
         } catch (err) {
             console.log("Failed to fetch cover letter data", err);
         }
-    }
-
-    useEffect(() => {
-        fetchCoverLetterData();
-        fetchCandidateData();
     }, []);
 
-    useEffect(() => {
-        setButtons(initButtons());
-        return () => setButtons([]);
-    }, [setButtons, selectedRows]);
-
-    const handleOpenSave = () => {
+    const handleOpenSave = useCallback(() => {
         setFormData({ pk_id: null, fk_candidate: null, content: "" });
         setCandidateValue("");
         setDialogOpen(true);
-    }
+    }, []);
 
-    const handleSave = async () => {
-        try {
-            if (candidateValue === "" || candidateValue === undefined) {
-                setErrors({ candidateValue: "Candidate is required" });
-                return;
-            }
-            if (formData.content === "" || formData.content === undefined) {
-                setErrors({ content: "Content is required" });
-                return;
-            }
-
-            const parsedCandidate = parseInt(candidateValue, 10);
-            const fk_candidate = isNaN(parsedCandidate) ? null : parsedCandidate;
-            const content = formData.content;
-
-            const response = await axiosInstanceToken.post("/cover_letter", {
-                pk_id: formData.pk_id,
-                fk_candidate: fk_candidate,
-                content: content
-            });
-            showSnackbar("Cover letter saved successfully", "success");
-            setDialogOpen(false);
-            fetchCoverLetterData();
-        } catch (err) {
-            console.log("Failed to save cover letter", err);
-            showSnackbar("Failed to save cover letter", "error");
-        }
-    }
-    const handleDelete = async () => {
+    const handleDelete = useCallback(async () => {
         if (selectedRows.length === 0) {
             showSnackbar("No rows selected for deletion!", "warning");
             return;
@@ -146,7 +86,59 @@ const CoverLetter = () => {
                 showSnackbar("Failed to delete cover letters!", "error");
             }
         });
+    }, [selectedRows, confirm, fetchCoverLetterData, showSnackbar]);
+
+    const initButtons = useCallback(() => {
+        const btns = [];
+
+        if (canAccessAddCV) {
+            btns.push({
+                label: "Add",
+                onClick: handleOpenSave,
+            });
+        }
+
+        if (canAccessDeleteCV) {
+            btns.push({
+                label: "Delete",
+                onClick: handleDelete,
+            });
+        }
+
+        return btns;
+    }, [canAccessAddCV, canAccessDeleteCV, handleOpenSave, handleDelete]);
+
+    
+
+    const handleSave = async () => {
+        try {
+            if (candidateValue === "" || candidateValue === undefined) {
+                setErrors({ candidateValue: "Candidate is required" });
+                return;
+            }
+            if (formData.content === "" || formData.content === undefined) {
+                setErrors({ content: "Content is required" });
+                return;
+            }
+
+            const parsedCandidate = parseInt(candidateValue, 10);
+            const fk_candidate = isNaN(parsedCandidate) ? null : parsedCandidate;
+            const content = formData.content;
+
+            await axiosInstanceToken.post("/cover_letter", {
+                pk_id: formData.pk_id,
+                fk_candidate: fk_candidate,
+                content: content
+            });
+            showSnackbar("Cover letter saved successfully", "success");
+            setDialogOpen(false);
+            fetchCoverLetterData();
+        } catch (err) {
+            console.log("Failed to save cover letter", err);
+            showSnackbar("Failed to save cover letter", "error");
+        }
     }
+    
     const handleEdit = (params) => {
         if(!canAccessEditCV) {
             showSnackbar("You don't have permission to edit cover letter", "info");
@@ -190,6 +182,16 @@ const CoverLetter = () => {
             [name]: "",
         }));
     }
+
+    useEffect(() => {
+        fetchCoverLetterData();
+        fetchCandidateData();
+    }, [fetchCoverLetterData, fetchCandidateData]);
+
+    useEffect(() => {
+        setButtons(initButtons());
+        return () => setButtons([]);
+    }, [setButtons, initButtons]);
 
     // Map rightsData to DataGrid rows
     const rows = (coverLetterData || []).map((item) => ({

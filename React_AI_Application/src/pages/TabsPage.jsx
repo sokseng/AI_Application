@@ -77,7 +77,7 @@ export default function TabsPage() {
     if (tabs.length > 0) {
       setTabIndex(0);
     }
-  }, [canAccessRole, canAccessUserRight, canAccessUser]);
+  }, [tabs.length, canAccessRole, canAccessUserRight, canAccessUser]);
 
   const handleChange = (event, newValue) => {
     setTabIndex(newValue);
