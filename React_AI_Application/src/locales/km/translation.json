@@ -1,0 +1,10 @@
+{
+  "TS_GS_SET_LIST_SPECIAL_CHARACTERS": "លេខសម្ងាត់ => កំណត់បញ្ជីតួអក្សរពិសេសដែលអនុញ្ញាតក្នុងពាក្យសម្ងាត់",
+  "TS_GS_MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "លេខសម្ងាត់ => ចំនួនតួអក្សរអប្បបរមានៅក្នុងពាក្យសម្ងាត់",
+  "TS_GS_TS_GS_MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "លេខសម្ងាត់ => ចំនួនតួអក្សរអតិបរមានៅក្នុងពាក្យសម្ងាត់",
+  "dashboard": "ទំព័រដើម",
+  "user_management": "គ្រប់គ្រងអ្នកប្រើប្រាស់",
+  "candidate": "បេក្ខជន",
+  "cover_letter": "ប្រវត្តិរូបសង្ខេប",
+  "setting": "ការកំណត់"
+}

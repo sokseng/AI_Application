@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import useUserStore from "../../store/useUserStore";
+import { useTranslation } from "react-i18next";
 import {
   Drawer,
   List,
@@ -25,6 +26,7 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
   const { userRights } = useUserStore();
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
+  const { t } = useTranslation();
 
   const handleToggleMenu = (label) =>
     setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
@@ -40,25 +42,25 @@ export default function Sidebar({ isDrawerOpen, onToggle, isMobile, drawerWidth,
 
   const menuItems = [
     // dashboard menu
-    { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
+    { label: t("dashboard"), href: "/dashboard", icon: <DashboardIcon /> },
     
     // user management menu
-    (canAccessRole || canAccessUserRight || canAccessUser) && { label: "User management", href: "/user", icon: <PersonIcon /> },
+    (canAccessRole || canAccessUserRight || canAccessUser) && { label: t("user_management"), href: "/user", icon: <PersonIcon /> },
     
     // candidate menu
     canAccessCandidate && {
-      label: "Candidates",
+      label: t("candidate"),
       href: "/candidate",
       icon: <HowToRegIcon />,
     },
 
     // cover letter menu
     canAccessCoverLetter &&
-    { label: "Cover letter", href: "/cover-letter", icon: <ArticleIcon /> },
+    { label: t("cover_letter"), href: "/cover-letter", icon: <ArticleIcon /> },
 
     // settings menu
     {
-    label: "Settings",
+    label: t("setting"),
     icon: <SettingsIcon />,
     children: [
       { label: "System parameter", href: "/system-parameter" },
