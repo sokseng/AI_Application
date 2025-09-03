@@ -2,6 +2,7 @@
 from sqlalchemy.orm import Session
 from app.models.user_model import User, UserSession, UserRole, UserRight
 from app.schemas.user_schema import DeleteUser
+from app.models.global_setting_model import GlobalSetting
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import timedelta, datetime, timezone
@@ -55,6 +56,34 @@ def get_all(db: Session):
         .join(UserRight, User.right_id == UserRight.pk_id, isouter=True)
     ).all()
 
+#get in global setting
+def get_password_settings(db: Session):
+    codes = [
+        "MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD",
+        "MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD",
+        "PASSWORD_SET_LIST_SPECIAL_CHARACTERS",
+    ]
+
+    settings = (
+        db.query(GlobalSetting)
+        .filter(GlobalSetting.code.in_(codes))
+        .all()
+    )
+
+    result = {}
+    for s in settings:
+        if s.type == "Number":
+            # Convert to int if value exists, else None
+            if s.value and s.value.strip().isdigit():
+                result[s.code] = int(s.value.strip())
+            else:
+                result[s.code] = None
+        else:
+            # Store stripped string if exists, else empty string
+            result[s.code] = s.value.strip() if s.value else ""
+
+    return result
+
 # create or update user
 def create(db: Session, user_data: dict):
     if user_data["pk_id"]:
@@ -76,6 +105,24 @@ def create(db: Session, user_data: dict):
         db_user.role_id = user_data["role_id"]
         db_user.right_id = user_data["right_id"]
     else:
+        
+        # Get password condition in global settings
+        settings = get_password_settings(db)
+        min_len = settings["MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD"]  # int
+        max_len = settings["MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD"]  # int
+        special_chars = settings["PASSWORD_SET_LIST_SPECIAL_CHARACTERS"] # str
+
+        passwords = user_data.get("password", "")
+
+        # Only validate if setting is not empty
+        if min_len is not None and len(passwords) < min_len:
+            raise HTTPException(status_code=400,detail="password is too short")
+        
+        if max_len is not None and len(passwords) > max_len:
+            raise HTTPException(status_code=400, detail="password is too long")
+        
+        if special_chars and not any(char in special_chars for char in passwords):
+            raise HTTPException(status_code=400,detail="password special character")
 
         # Check for duplicate email when creating
         existing_email = db.query(User).filter(User.email == user_data["email"]).first()
@@ -86,7 +133,7 @@ def create(db: Session, user_data: dict):
         db_user = User(
             name=user_data["name"],
             email=user_data["email"],
-            password=user_data["password"],
+            password=bcrypt_context.hash(user_data["password"]),
             role_id=user_data["role_id"],
             right_id=user_data["right_id"]
         )

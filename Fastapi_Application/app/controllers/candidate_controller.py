@@ -3,6 +3,7 @@ from app.models.candidate_model import Candidate
 from app.models.user_model import UserRight
 from app.models.user_model import User
 from app.schemas.candidate_schema import CandidateCreate, DeleteCandidate
+from app.models.global_setting_model import GlobalSetting
 from passlib.context import CryptContext
 from app.config.settings import settings  # secret + algorithm from env/config
 from fastapi import HTTPException
@@ -60,6 +61,34 @@ def get_all_candidate(db: Session):
     
     return result
 
+#get in global setting
+def get_password_settings(db: Session):
+    codes = [
+        "MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD",
+        "MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD",
+        "PASSWORD_SET_LIST_SPECIAL_CHARACTERS",
+    ]
+
+    settings = (
+        db.query(GlobalSetting)
+        .filter(GlobalSetting.code.in_(codes))
+        .all()
+    )
+
+    result = {}
+    for s in settings:
+        if s.type == "Number":
+            # Convert to int if value exists, else None
+            if s.value and s.value.strip().isdigit():
+                result[s.code] = int(s.value.strip())
+            else:
+                result[s.code] = None
+        else:
+            # Store stripped string if exists, else empty string
+            result[s.code] = s.value.strip() if s.value else ""
+
+    return result
+
 #create or update candidate
 def create_or_update_candidate(db: Session, candidate: CandidateCreate):
     if candidate.pk_id:
@@ -98,6 +127,25 @@ def create_or_update_candidate(db: Session, candidate: CandidateCreate):
         db_candidate.user_id = db_user.pk_id
         
     else:
+
+        # Get password condition in global settings
+        settings = get_password_settings(db)
+        min_len = settings["MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD"]  # int
+        max_len = settings["MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD"]  # int
+        special_chars = settings["PASSWORD_SET_LIST_SPECIAL_CHARACTERS"] # str
+
+        passwords = candidate.password
+
+        # Only validate if setting is not empty
+        if min_len is not None and len(passwords) < min_len:
+            raise HTTPException(status_code=400,detail="password is too short")
+        
+        if max_len is not None and len(passwords) > max_len:
+            raise HTTPException(status_code=400, detail="password is too long")
+        
+        if special_chars and not any(char in special_chars for char in passwords):
+            raise HTTPException(status_code=400,detail="password special character")
+        
         #check exist email
         existing_email = db.query(User).filter(User.email == candidate.email).first()
         if existing_email:

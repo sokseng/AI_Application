@@ -227,6 +227,15 @@ const Candidate = () => {
             if (err.response && err.response.status === 400 && err.response.data.detail === "Email already exists") {
                 showSnackbar("Email already exists", "error");
                 setErrors({ email: 'duplicate' });
+            } else if (err.response && err.response.status === 400 && err.response.data.detail === "password is too short") {
+                showSnackbar("Password must be greater than or equal to the minimum length defined in system settings", "error");
+                //setErrors({ password: 'Password is required' });
+            } else if (err.response && err.response.status === 400 && err.response.data.detail === "password is too long") {
+                showSnackbar("Password must be less than or equal to the maximum length defined in system settings", "error");
+                //setErrors({ password: 'Password is required' });
+            } else if (err.response && err.response.status === 400 && err.response.data.detail === "password special character") {
+                showSnackbar("Password must contain at least one special character defined in system settings", "error");
+                //setErrors({ password: 'Password is required' });
             } else {
                 showSnackbar("Failed to save user", "error");
             }

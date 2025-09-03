@@ -44,13 +44,13 @@ def get_users(db: Session = Depends(get_db), current_user_id: int = Depends(veri
 # # create or update user
 @router.post("/", response_model=UserCreate)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    hashed_password = bcrypt_context.hash(user.password)
+    #hashed_password = bcrypt_context.hash(user.password)
 
     user_data = {
         "pk_id": user.pk_id,
         "name": user.name,
         "email": user.email,
-        "password": hashed_password,
+        "password": user.password,
         "role_id": user.role_id,
         "right_id": user.right_id
     }
@@ -66,16 +66,18 @@ def create_login(data: UserLogin, db: Session = Depends(get_db)):
     access_token_expires = timedelta(minutes=120)
     now = datetime.now().replace(microsecond=0)
 
-    #check exist access token
-    if data.access_token:
-        existing_access_token = user_controller.verify_access_token(data.access_token, db)
-        if existing_access_token:
-            return AccessToken(access_token=existing_access_token.access_token)
-
     #Get user
     user = user_controller.get_by_email(data.email, db)
     if not user:
         raise HTTPException(status_code=404, detail="Email not found")
+    #get user rights
+    rights = user_controller.get_user_right(user.pk_id, db)
+
+    #check exist access token
+    if data.access_token:
+        existing_access_token = user_controller.verify_access_token(data.access_token, db)
+        if existing_access_token:
+            return AccessToken(access_token=existing_access_token.access_token, rights=rights)
     
     #Verify password
     isMatch = user_controller.verify_password(data.password, user.password)
@@ -92,9 +94,6 @@ def create_login(data: UserLogin, db: Session = Depends(get_db)):
         expiration_date=(now + access_token_expires).strftime("%Y-%m-%d %H:%M:%S"),
         db=db
     )
-
-    #get user rights
-    rights = user_controller.get_user_right(user.pk_id, db)
 
     return AccessToken(
         access_token=access_token,
