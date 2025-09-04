@@ -62,6 +62,9 @@ def get_password_settings(db: Session):
         "MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD",
         "MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD",
         "PASSWORD_SET_LIST_SPECIAL_CHARACTERS",
+        "AT_LEAST_ONE_NUMBER_REQUIRED_IN_PASSWORD",
+        "AT_LEAST_ONE_UPPERCASE_CHARACTER_REQUIRED_IN_PASSWORD",
+        "AT_LEAST_ONE_LOWERCASE_CHARACTER_REQUIRED_IN_PASSWORD",
     ]
 
     settings = (
@@ -78,6 +81,14 @@ def get_password_settings(db: Session):
                 result[s.code] = int(s.value.strip())
             else:
                 result[s.code] = None
+
+        elif s.type == "Boolean":
+            if s.value is None:
+                result[s.code] = False
+            else:
+                val = s.value.strip().lower()
+                result[s.code] = val in ("true", "1", "yes")
+
         else:
             # Store stripped string if exists, else empty string
             result[s.code] = s.value.strip() if s.value else ""
@@ -111,6 +122,9 @@ def create(db: Session, user_data: dict):
         min_len = settings["MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD"]  # int
         max_len = settings["MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD"]  # int
         special_chars = settings["PASSWORD_SET_LIST_SPECIAL_CHARACTERS"] # str
+        require_number = settings["AT_LEAST_ONE_NUMBER_REQUIRED_IN_PASSWORD"]       # bool
+        require_upper = settings["AT_LEAST_ONE_UPPERCASE_CHARACTER_REQUIRED_IN_PASSWORD"]  # bool
+        require_lower = settings["AT_LEAST_ONE_LOWERCASE_CHARACTER_REQUIRED_IN_PASSWORD"]  # bool
 
         passwords = user_data.get("password", "")
 
@@ -123,6 +137,15 @@ def create(db: Session, user_data: dict):
         
         if special_chars and not any(char in special_chars for char in passwords):
             raise HTTPException(status_code=400,detail="password special character")
+        
+        if require_number and not any(char.isdigit() for char in passwords):
+            raise HTTPException(status_code=400, detail="Password must contain at least one number")
+
+        if require_upper and not any(char.isupper() for char in passwords):
+            raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter")
+
+        if require_lower and not any(char.islower() for char in passwords):
+            raise HTTPException(status_code=400, detail="Password must contain at least one lowercase letter")
 
         # Check for duplicate email when creating
         existing_email = db.query(User).filter(User.email == user_data["email"]).first()

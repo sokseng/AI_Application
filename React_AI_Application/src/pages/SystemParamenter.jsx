@@ -41,7 +41,6 @@ const SystemParamenter = () => {
   // Save changes
   const handleSave = useCallback(async () => {
     try {
-      debugger
       if (document.activeElement) {
         document.activeElement.blur();
       }

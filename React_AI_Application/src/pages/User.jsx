@@ -224,14 +224,17 @@ const User = () => {
         setErrors({ email: 'Email is required' });
       } else if(err.response && err.response.status === 400 && err.response.data.detail === "password is too short"){
         showSnackbar("Password must be greater than or equal to the minimum length defined in system settings","error");
-        //setErrors({ password: 'Password is required' });
       }else if(err.response && err.response.status === 400 && err.response.data.detail === "password is too long"){
         showSnackbar("Password must be less than or equal to the maximum length defined in system settings","error");
-        //setErrors({ password: 'Password is required' });
       } else if(err.response && err.response.status === 400 && err.response.data.detail === "password special character"){
         showSnackbar("Password must contain at least one special character defined in system settings","error");
-        //setErrors({ password: 'Password is required' });
-      } else {
+      }else if(err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one number"){
+        showSnackbar("Password must contain at least one number","error");
+      }else if(err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one uppercase letter"){
+        showSnackbar("Password must contain at least one uppercase character","error");
+      }else if(err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one lowercase letter"){
+        showSnackbar("Password must contain at least one lowercase character","error");
+      }else {
         showSnackbar("Failed to save user!", "error");
       }
     }

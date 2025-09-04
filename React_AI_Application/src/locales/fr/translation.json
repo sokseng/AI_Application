@@ -3,6 +3,8 @@
   "TS_GS_MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "Mot de passe => Nombre minimum de caractères dans le mot de passe",
   "TS_GS_TS_GS_MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "Mot de passe => Nombre maximum de caractères dans le mot de passe",
   "TS_GS_AT_LEAST_ONE_NUMBER_REQUIRED_IN_PASSWORD": "Mot de passe => Au moins un chiffre requis dans le mot de passe",
+  "TS_GS_AT_LEAST_ONE_UPPERCASE_CHARACTER_REQUIRED_IN_PASSWORD": "Mot de passe => Au moins une lettre majuscule requise dans le mot de passe",
+  "TS_GS_AT_LEAST_ONE_LOWERCASE_CHARACTER_REQUIRED_IN_PASSWORD": "Mot de passe => Au moins une lettre minuscule requise dans le mot de passe",
   "dashboard": "Tableau de bord",
   "user_management": "Gestion des utilisateurs",
   "candidate": "Candidat",
