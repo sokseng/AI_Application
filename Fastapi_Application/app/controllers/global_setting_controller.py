@@ -19,6 +19,6 @@ def get_all_global_setting(db: Session):
 #update system parameter
 def update_system_parameter(db: Session, data: SystemParameterUpdate):
     for item in data.changedRows:
-        db.query(GlobalSetting).filter(GlobalSetting.pk_id == item.pk_id).update({GlobalSetting.value: item.value}, synchronize_session=False)
+        db.query(GlobalSetting).filter(GlobalSetting.pk_id == item.pk_id).update({GlobalSetting.value: str(item.value)}, synchronize_session=False)
     db.commit()
     return True

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import Paper from "@mui/material/Paper";
 import { DataGrid, gridClasses } from "@mui/x-data-grid";
-import TextField from "@mui/material/TextField";
+import { TextField, Checkbox } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import axiosInstanceToken from "../utils/axiosInstanceToken";
 import { useBottomBar } from "../components/layout/BottomBarContext";
@@ -60,16 +60,17 @@ const SystemParamenter = () => {
         showSnackbar("No changes to save", "info");
         return;
       }
-
-      await axiosInstanceToken.post("/global/parameter", {changedRows: changedRows});
+      
+      await axiosInstanceToken.post("/global/parameter", { changedRows: changedRows });
       showSnackbar("System parameters saved successfully", "success");
 
       originalDataRef.current = [...parameterData];
+      fetchSystemParamenter();
     } catch (err) {
       console.error("Failed to save system parameter", err);
       showSnackbar("Failed to save system parameter", "error");
     }
-  }, [parameterData, showSnackbar]);
+  }, [parameterData, showSnackbar, fetchSystemParamenter]);
 
   // Initialize bottom bar buttons
   const initButtons = useCallback(
@@ -92,12 +93,59 @@ const SystemParamenter = () => {
     {
       field: "value",
       headerName: "Value",
-      flex: 1,
-      editable: true,
+      width: 200,
+      editable: true, // make the cell editable
+      renderCell: (params) => {
+        // Boolean type shows checkbox
+        if (params.row.type === "Boolean") {
+          return (
+            <Checkbox
+              checked={params.value === true || params.value === "True"}
+            />
+          );
+        }
+
+        // Text type
+        if (params.row.type === "Text") {
+          return <span>{params.value || ""}</span>;
+        }
+
+        // Number type
+        if (params.row.type === "Number") {
+          return <span>{params.value || ""}</span>;
+        }
+
+        return <span>{params.value}</span>;
+      },
       renderEditCell: (params) => {
+        // Boolean type editing with live tick
+        if (params.row.type === "Boolean") {
+          const checked = params.value === true || params.value === "True";
+          return (
+            <Checkbox
+              autoFocus
+              checked={checked}
+              onChange={(e) => {
+                params.api.setEditCellValue(
+                  {
+                    id: params.id,
+                    field: params.field,
+                    value: e.target.checked ? true : false, // store as boolean
+                  },
+                  e
+                );
+                // Immediately commit to show tick
+                params.api.commitCellChange({ id: params.id, field: params.field });
+              }}
+            />
+          );
+        }
+
+        // Text type
         if (params.row.type === "Text") {
           return (
             <TextField
+              autoFocus
               fullWidth
               variant="standard"
               value={params.value || ""}
@@ -109,9 +157,13 @@ const SystemParamenter = () => {
               }
             />
           );
-        } else if (params.row.type === "Number") {
+        }
+
+        // Number type
+        if (params.row.type === "Number") {
           return (
             <TextField
+              autoFocus
               fullWidth
               variant="standard"
               type="number"
@@ -129,9 +181,12 @@ const SystemParamenter = () => {
             />
           );
         }
+
         return <span>{params.value}</span>;
       },
     },
+
+
     { field: "type", headerName: "Type", flex: 1 },
   ];
 

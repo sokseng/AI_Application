@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel, ConfigDict
-from typing import  List
+from typing import  List, Any
 
 class SystemParameterBase(BaseModel):
     code: str
@@ -11,7 +11,7 @@ class SystemParameterBase(BaseModel):
 class SystemParameterCreate(BaseModel):
     pk_id: int
     name: str
-    value: str
+    value: Any
     type: str
 
 class SystemParameterUpdate(BaseModel):
