@@ -17,3 +17,7 @@ pip install psycopg2-binary
 alembic revision --autogenerate -m "Add name column to t_user_role"
 alembic upgrade head
 
+
+command run fastapi for allow all device
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+

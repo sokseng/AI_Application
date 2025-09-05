@@ -28,6 +28,7 @@ class UserSession(Base):
     access_token = Column(Text, nullable=False)
     token_expired = Column(DateTime, nullable=False)  # stores both date & time
     session_creation_date = Column(DateTime, default=func.now(), nullable=False)
+    ip_address = Column(String, nullable=True)
 
     user = relationship("User", back_populates="sessions")
 

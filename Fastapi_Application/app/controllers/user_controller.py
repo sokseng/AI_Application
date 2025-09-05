@@ -28,11 +28,12 @@ def create_access_token(user_id: int, expires_delta: timedelta):
 
 
 # # insert data into table token
-def create_token(user_id: int, access_token: str, expiration_date: datetime, db: Session):
+def create_token(ip_address: str, user_id: int, access_token: str, expiration_date: datetime, db: Session):
     token = UserSession(
         user_id = user_id,  
         access_token = access_token,
         token_expired=expiration_date,
+        ip_address=ip_address,
     )
     db.add(token)
     db.commit()

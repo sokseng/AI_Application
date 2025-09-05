@@ -1,15 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import (
-    user_router,
-    user_role_router,
-    user_right_router,
-    candidate_router,
-    cover_letter_router,
-    forgot_password_router,
-    global_setting_router,
-)
+from app.routers import user_router
+from app.routers import user_role_router
+from app.routers import user_right_router
+from app.routers import candidate_router
+from app.routers import cover_letter_router
+from app.routers import forgot_password_router
+from app.routers import global_setting_router
 
 from app.database.session import Base, engine
 from app.models.audit_trace_model import AuditTrace
@@ -21,12 +19,11 @@ from app.models.global_setting_model import GlobalSetting
 # import other models similarly...
 
 def create_tables():
-    """Create all tables if they don't exist"""
-    print("Creating database tables...")
+    print("Creating database tables (if not exist)...")
     Base.metadata.create_all(bind=engine)
     print("Tables created successfully.")
 
-# Run once on startup
+# Call this once on app startup or standalone
 create_tables()
 
 app = FastAPI(title="FastAPI CRUD Example")
@@ -36,14 +33,12 @@ origins = [
     "http://127.0.0.1:3000",  # Alternate
 ]
 
-#origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # allow requests from any device
-    allow_credentials=True,     # allow cookies
-    allow_methods=["*"],        # allow all HTTP methods
-    allow_headers=["*"],        # allow all headers
+    allow_origins=origins,
+    allow_credentials=True,  # mandatory for cookies
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Register routers

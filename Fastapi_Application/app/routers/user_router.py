@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, Request, HTTPException, Body
 from sqlalchemy.orm import Session
 from app.schemas.user_schema import UserCreate, DeleteUser, AccessToken, UserLogin, UserResponseData
 from app.controllers import user_controller
@@ -62,7 +62,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 # # user login for get token
 @router.post("/login", response_model=AccessToken)
-def create_login(data: UserLogin, db: Session = Depends(get_db)):
+def create_login(request: Request,data: UserLogin, db: Session = Depends(get_db)):
     access_token_expires = timedelta(minutes=120)
     now = datetime.now().replace(microsecond=0)
 
@@ -87,8 +87,11 @@ def create_login(data: UserLogin, db: Session = Depends(get_db)):
     #create access token
     access_token = user_controller.create_access_token(user.pk_id, expires_delta=access_token_expires)
     
+    ip_address = request.client.host
+
     # Save access token
     user_controller.create_token(
+        ip_address=ip_address,
         user_id=user.pk_id,
         access_token=access_token,
         expiration_date=(now + access_token_expires).strftime("%Y-%m-%d %H:%M:%S"),
