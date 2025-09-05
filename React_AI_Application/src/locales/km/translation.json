@@ -1,7 +1,7 @@
 {
   "TS_GS_SET_LIST_SPECIAL_CHARACTERS": "លេខសម្ងាត់ => កំណត់បញ្ជីតួអក្សរពិសេសដែលអនុញ្ញាតក្នុងពាក្យសម្ងាត់",
   "TS_GS_MINIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "លេខសម្ងាត់ => ចំនួនតួអក្សរអប្បបរមានៅក្នុងពាក្យសម្ងាត់",
-  "TS_GS_TS_GS_MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "លេខសម្ងាត់ => ចំនួនតួអក្សរអតិបរមានៅក្នុងពាក្យសម្ងាត់",
+  "TS_GS_MAXIMUM_NUMBER_OF_CHARACTERS_IN_PASSWORD": "លេខសម្ងាត់ => ចំនួនតួអក្សរអតិបរមានៅក្នុងពាក្យសម្ងាត់",
   "TS_GS_AT_LEAST_ONE_NUMBER_REQUIRED_IN_PASSWORD": "លេខសម្ងាត់ => ត្រូវតែមានលេខនៅក្នុងពាក្យសម្ងាត់",
   "TS_GS_AT_LEAST_ONE_UPPERCASE_CHARACTER_REQUIRED_IN_PASSWORD": "ពាក្យសម្ងាត់ => យ៉ាងហោចណាស់តួអក្សរធំមួយដែលត្រូវការនៅក្នុងពាក្យសម្ងាត់",
   "TS_GS_AT_LEAST_ONE_LOWERCASE_CHARACTER_REQUIRED_IN_PASSWORD": "ពាក្យសម្ងាត់ => យ៉ាងហោចណាស់តួអក្សរតូចមួយដែលត្រូវការនៅក្នុងពាក្យសម្ងាត់",
