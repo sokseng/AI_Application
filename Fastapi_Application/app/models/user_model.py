@@ -1,5 +1,5 @@
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, func
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, func, Boolean
 from app.database.session import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -41,6 +41,7 @@ class User(Base):
     email = Column(String, nullable=False, unique=True)
     role_id = Column(Integer, ForeignKey("t_user_role.pk_id"), nullable=True)
     right_id = Column(Integer, ForeignKey("t_user_right.pk_id"), nullable=True)
+    status = Column(Boolean, nullable=False, default=False)
 
     role = relationship("UserRole", back_populates="users")
     right = relationship("UserRight", back_populates="users")

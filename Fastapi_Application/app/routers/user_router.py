@@ -36,6 +36,7 @@ def get_users(db: Session = Depends(get_db), current_user_id: int = Depends(veri
             "role_name": u.role_name,
             "right_id": u.right_id,
             "user_right": u.user_right,
+            "status": u.status
         }
         for u in user
     ]

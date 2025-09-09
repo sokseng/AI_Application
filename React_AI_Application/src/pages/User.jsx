@@ -29,6 +29,7 @@ const columns = [
   { field: "email", headerName: "email", flex: 1 },
   { field: "role_name", headerName: "Role name", flex: 1 },
   { field: "user_right", headerName: "User right", flex: 1 },
+  { field: "status", headerName: "Status", flex: 1 },
 ];
 
 const User = () => {
@@ -255,7 +256,7 @@ const User = () => {
 
     if (canAccessDeleteUser) {
       btns.push({
-        label: "Delete",
+        label: "Deactivate",
         onClick: handleDelete,
       });
     }
@@ -271,7 +272,8 @@ const User = () => {
     role_name: item.role_name,
     role_id: item.role_id,
     user_right: item.user_right,
-    right_id: item.right_id
+    right_id: item.right_id,
+    status: item.status === false ? "Active" : "Deactive",
   }));
 
 

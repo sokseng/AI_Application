@@ -70,6 +70,7 @@ class UserResponseData(BaseModel):
     role_name: Optional[str]
     right_id: Optional[int]
     user_right: Optional[str]
+    status: bool
     
 class UserResponse(UserBase):
     pk_id: int

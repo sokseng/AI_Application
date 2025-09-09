@@ -48,6 +48,7 @@ def get_all(db: Session):
             User.pk_id,
             User.name,
             User.email,
+            User.status,
             UserRole.name.label("role_name"),
             UserRole.pk_id.label("role_id"),
             UserRight.name.label("user_right"),
@@ -252,8 +253,8 @@ def delete(db: Session, data: DeleteUser):
     if not users:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Delete all users
+    #update users status
     for user in users:
-        db.delete(user)
+        user.status = True
     db.commit()
     return {"message": "Users deleted successfully"}
