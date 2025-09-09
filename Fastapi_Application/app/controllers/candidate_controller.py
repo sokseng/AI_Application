@@ -4,10 +4,12 @@ from app.models.user_model import UserRight
 from app.models.user_model import User
 from app.schemas.candidate_schema import CandidateCreate, DeleteCandidate
 from app.models.global_setting_model import GlobalSetting
+from app.models.cover_letter_model import CoverLetter
 from passlib.context import CryptContext
 from app.config.settings import settings  # secret + algorithm from env/config
 from fastapi import HTTPException
 from enum import Enum
+from typing import Set
 
 
 SECRET_KEY = settings.JWT_SECRET_KEY
@@ -208,27 +210,36 @@ def create_or_update_candidate(db: Session, candidate: CandidateCreate):
 def delete_candidate(db: Session, data: DeleteCandidate):
     if not data.ids:
         raise HTTPException(status_code=400, detail="No IDs provided for deletion")
-    
+
+    # Query candidates to delete
     candidates = db.query(Candidate).filter(Candidate.pk_id.in_(data.ids)).all()
     if not candidates:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+        raise HTTPException(status_code=404, detail="Candidates not found")
 
-    # Collect related user IDs
-    user_ids = [c.user_id for c in candidates if c.user_id]
+    # Collect user IDs associated with candidates
+    user_ids: Set[int] = {c.user_id for c in candidates if c.user_id}
 
-    users = []
-    if user_ids:
-        users = db.query(User).filter(User.pk_id.in_(user_ids)).all()
+    try:
+        # Delete candidates (cover letters are deleted via DB cascade)
+        for candidate in candidates:
+            db.delete(candidate)
 
-    # Delete users first (to avoid FK constraint issues)
-    for user in users:
-        db.delete(user)
+        # Flush to apply candidate deletions and update relationships
+        db.flush()
 
-    # Delete candidates
-    for candidate in candidates:
-        db.delete(candidate)
+        # Delete users if they have no remaining candidates or other dependencies
+        if user_ids:
+            users = db.query(User).filter(User.pk_id.in_(user_ids)).all()
+            for user in users:
+                # Check if user has no candidates
+                if not user.candidates:
+                    db.delete(user)
 
-    db.commit()
-    
-    return {"message": "Candidates and related users deleted successfully"}
+        # Commit the transaction
+        db.commit()
+        return {"message": "Candidates, their cover letters, and eligible users deleted successfully"}
+
+    except Exception as e:
+        db.rollback()  # Roll back on error
+        raise HTTPException(status_code=500, detail=f"Error deleting records: {str(e)}")
 

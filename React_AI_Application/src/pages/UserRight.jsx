@@ -87,25 +87,6 @@ export default function Role() {
     });
   }, [selectedRows, confirm, fetchUserRights, showSnackbar]);
 
-  const initButtons = useCallback(() => {
-    const btns = [];
-
-    if (canAccessAddUserRight) {
-      btns.push({
-        label: "Add",
-        onClick: handleOpenSave,
-      });
-    }
-
-    if (canAccessDeleteUserRight) {
-      btns.push({
-        label: "Delete",
-        onClick: handleDelete,
-      });
-    }
-
-    return btns;
-  }, [canAccessAddUserRight, canAccessDeleteUserRight, handleOpenSave, handleDelete]);
 
   // Handle form change
   const handleChange = (e) => {
@@ -212,9 +193,24 @@ export default function Role() {
   }, [fetchUserRights]);
 
   useEffect(() => {
-    setButtons(initButtons());
-    return () => setButtons([]);
-  }, [setButtons, initButtons]);
+    const btns = [];
+
+    if (canAccessAddUserRight) {
+      btns.push({
+        label: "Add",
+        onClick: handleOpenSave,
+      });
+    }
+
+    if (canAccessDeleteUserRight) {
+      btns.push({
+        label: "Delete",
+        onClick: handleDelete,
+      });
+    }
+
+    setButtons(btns);
+  }, [setButtons, selectedRows, canAccessAddUserRight, canAccessDeleteUserRight, handleDelete, handleOpenSave]);
 
   // Map rightsData to DataGrid rows
   const rows = rightsData.map((item) => ({
@@ -232,10 +228,14 @@ export default function Role() {
         disableRowSelectionOnClick
         getRowId={(row) => row.pk_id}
         selectionModel={selectedRows}
-        onSelectionModelChange={(newSelection) => {
-          const numericSelection = newSelection.map(id => Number(id));
-          setSelectedRows(numericSelection);
-          console.log("Selected rows:", numericSelection);
+        onRowSelectionModelChange={(newSelection) => {
+          // newSelection is now an object with .ids Set
+          let selectionArray = [];
+          if (newSelection?.ids instanceof Set) {
+            selectionArray = Array.from(newSelection.ids).map(id => Number(id));
+          }
+          setSelectedRows(selectionArray);
+          console.log("Selected rows:", selectionArray);
           console.log(paginationModel);
         }}
         onRowDoubleClick={handleEdit}

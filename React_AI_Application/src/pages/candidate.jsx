@@ -67,7 +67,7 @@ const Candidate = () => {
     }, []);
 
     const handleDelete = useCallback(() => {
-        if (selectedRows.length === 0) {
+        if (!selectedRows || selectedRows.length === 0) {
             showSnackbar("No rows selected for deletion!", "warning");
             return;
         }
@@ -83,7 +83,7 @@ const Candidate = () => {
                 showSnackbar("Failed to delete candidates!", "error");
             }
         });
-    }, [confirm, fetchCandidateData, selectedRows, showSnackbar]);
+    }, [selectedRows,confirm, fetchCandidateData, showSnackbar]);
 
     const handleOpenSave = useCallback(() => {
         setFormData({
@@ -103,23 +103,6 @@ const Candidate = () => {
         setUserRightValue("");
         setDialogOpen(true);
     }, []);
-
-    const buildButtons = useCallback(() => {
-        const btns = [];
-        if (canAccessCandidateAdd) {
-            btns.push({
-                label: "Add",
-                onClick: handleOpenSave,
-            });
-        }
-        if (canAccessCandidateDelete) {
-            btns.push({
-                label: "Delete",
-                onClick: handleDelete,
-            });
-        }
-        return btns;
-    }, [canAccessCandidateAdd, canAccessCandidateDelete, handleDelete, handleOpenSave]);
 
     const fetchUserRightsDropdown = useCallback(async () => {
         try {
@@ -235,7 +218,7 @@ const Candidate = () => {
                 showSnackbar("Password must contain at least one special character defined in system settings", "error");
             } else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one number") {
                 showSnackbar("Password must contain at least one number", "error");
-            }else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one uppercase letter") {
+            } else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one uppercase letter") {
                 showSnackbar("Password must contain at least one uppercase character", "error");
             } else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one lowercase letter") {
                 showSnackbar("Password must contain at least one lowercase character", "error");
@@ -273,9 +256,20 @@ const Candidate = () => {
     }, [fetchCandidateData, fetchUserRightsDropdown]);
 
     useEffect(() => {
-        setButtons(buildButtons());// set buttons from function
-        return () => setButtons([]);// cleanup when leaving page
-    }, [setButtons, buildButtons]);
+        const btns = [];
+        if (canAccessCandidateAdd) {
+            btns.push({ label: "Add", onClick: handleOpenSave });
+        }
+        if (canAccessCandidateDelete) {
+            btns.push({
+                label: "Delete",
+                onClick: handleDelete,
+            });
+        }
+        setButtons(btns);
+        return () => setButtons([]);
+    }, [canAccessCandidateAdd, canAccessCandidateDelete, handleOpenSave, handleDelete, setButtons, selectedRows]);
+
 
     const rows = (candidateData || []).map((item) => ({
         pk_id: item.pk_id,
@@ -302,10 +296,15 @@ const Candidate = () => {
                 checkboxSelection
                 disableRowSelectionOnClick
                 getRowId={(row) => row.pk_id}
-                onSelectionModelChange={(newSelection) => {
-                    const numericSelection = newSelection.map(id => Number(id));
-                    setSelectedRows(numericSelection);
-                    console.log("Selected rows:", numericSelection);
+                selectionModel={selectedRows}
+                onRowSelectionModelChange={(newSelection) => {
+                    // newSelection is now an object with .ids Set
+                    let selectionArray = [];
+                    if (newSelection?.ids instanceof Set) {
+                        selectionArray = Array.from(newSelection.ids).map(id => Number(id));
+                    }
+                    setSelectedRows(selectionArray);
+                    console.log("Selected rows:", selectionArray);
                     console.log(paginationModel);
                 }}
                 onRowDoubleClick={handleEdit}

@@ -7,7 +7,7 @@ import axiosInstanceToken from "../utils/axiosInstanceToken";
 import { useBottomBar } from "../components/layout/BottomBarContext";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 
-const SystemParameter = () => {
+const SystemParamenter = () => {
   const { t } = useTranslation();
   const { setButtons } = useBottomBar();
   const { showSnackbar } = useSnackbar();
@@ -23,7 +23,7 @@ const SystemParameter = () => {
     type: item.type,
   }));
 
-  const fetchSystemParameter = useCallback(async () => {
+  const fetchSystemParamenter = useCallback(async () => {
     try {
       const response = await axiosInstanceToken.get("/global/parameter");
       if (response.data?.length > 0) {
@@ -38,7 +38,6 @@ const SystemParameter = () => {
     }
   }, []);
 
-  console.log(paginationModel);
   const handleSave = useCallback(async () => {
     try {
       if (document.activeElement) document.activeElement.blur();
@@ -61,18 +60,18 @@ const SystemParameter = () => {
       await axiosInstanceToken.post("/global/parameter", { changedRows });
       showSnackbar("System parameters saved successfully", "success");
       originalDataRef.current = [...parameterData];
-      fetchSystemParameter();
+      fetchSystemParamenter();
     } catch (err) {
       console.error("Failed to save system parameter", err);
       showSnackbar("Failed to save system parameter", "error");
     }
-  }, [parameterData, showSnackbar, fetchSystemParameter]);
+  }, [parameterData, showSnackbar, fetchSystemParamenter]);
 
   const initButtons = useCallback(() => [{ label: "Save", onClick: handleSave }], [handleSave]);
 
   useEffect(() => {
-    fetchSystemParameter();
-  }, [fetchSystemParameter]);
+    fetchSystemParamenter();
+  }, [fetchSystemParamenter]);
 
   useEffect(() => {
     setButtons(initButtons());
@@ -89,29 +88,23 @@ const SystemParameter = () => {
       renderCell: (params) => {
         if (params.row.type === "Boolean") {
           return (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                marginLeft: -10,
-              }}
-            >
-              <Checkbox
-                checked={params.value === true || params.value === "True"}
-                onChange={(e) => {
-                  const newVal = e.target.checked;
-                  setParameterData((prev) =>
-                    prev.map((row) =>
-                      row.pk_id === params.id ? { ...row, value: newVal } : row
-                    )
-                  );
-                }}
-              />
-            </div>
+            <Checkbox
+              checked={params.value === true || params.value === "True"}
+              onChange={(e) => {
+                const newVal = e.target.checked;
 
+                // ✅ only stop edit mode if currently editing
+                if (params.api.getCellMode(params.id, params.field) === "edit") {
+                  params.api.stopCellEditMode({ id: params.id, field: params.field });
+                }
+
+                setParameterData((prev) =>
+                  prev.map((row) =>
+                    row.pk_id === params.id ? { ...row, value: newVal } : row
+                  )
+                );
+              }}
+            />
           );
         }
         return <span>{params.value}</span>;
@@ -124,14 +117,16 @@ const SystemParameter = () => {
               checked={params.value === true || params.value === "True"}
               onChange={(e) => {
                 const newVal = e.target.checked;
+
+                if (params.api.getCellMode(params.id, params.field) === "edit") {
+                  params.api.stopCellEditMode({ id: params.id, field: params.field });
+                }
+
                 setParameterData((prev) =>
                   prev.map((row) =>
                     row.pk_id === params.id ? { ...row, value: newVal } : row
                   )
                 );
-                if (params.api.getCellMode(params.id, params.field) === "edit") {
-                  params.api.stopCellEditMode({ id: params.id, field: params.field });
-                }
               }}
             />
           );
@@ -147,13 +142,6 @@ const SystemParameter = () => {
             onChange={(e) => {
               const val = e.target.value;
               if (params.row.type === "Number" && !/^\d*$/.test(val)) return;
-
-              // Update parameterData directly
-              setParameterData((prev) =>
-                prev.map((row) =>
-                  row.pk_id === params.id ? { ...row, value: val } : row
-                )
-              );
               params.api.setEditCellValue({ id: params.id, field: params.field, value: val }, e);
             }}
             onBlur={() => {
@@ -172,35 +160,7 @@ const SystemParameter = () => {
     },
     { field: "type", headerName: "Type", flex: 1 },
   ];
-
-  const handleCellEditStop = useCallback((params) => {
-    setParameterData((prev) =>
-      prev.map((row) =>
-        row.pk_id === params.id ? { ...row, [params.field]: params.value } : row
-      )
-    );
-  }, []);
-
-  const handleCellClick = useCallback((params, event) => {
-    if (params.field === "value" && params.row.type !== "Boolean") {
-      // Only start edit mode if the cell is not already in edit mode
-      if (params.api.getCellMode(params.id, params.field) !== "edit") {
-        event.defaultMuiPrevented = true;
-        params.api.startCellEditMode({ id: params.id, field: params.field });
-      }
-    }
-  }, []);
-
-  const handleCellDoubleClick = useCallback((params, event) => {
-    if (params.field === "value" && params.row.type !== "Boolean") {
-      // Only start edit mode if the cell is not already in edit mode
-      if (params.api.getCellMode(params.id, params.field) !== "edit") {
-        event.defaultMuiPrevented = true;
-        params.api.startCellEditMode({ id: params.id, field: params.field });
-      }
-    }
-  }, []);
-
+  console.log(paginationModel);
   return (
     <Paper sx={{ height: 520, width: "100%", padding: 2 }}>
       <DataGrid
@@ -218,9 +178,19 @@ const SystemParameter = () => {
           pagination: { paginationModel: { page: 0, pageSize: 25 } },
         }}
         editMode="cell"
-        onCellClick={handleCellClick}
-        onCellDoubleClick={handleCellDoubleClick}
-        onCellEditStop={handleCellEditStop}
+        onCellClick={(params, event) => {
+          if (params.field === "value" && params.row.type !== "Boolean") {
+            event.defaultMuiPrevented = true;
+            //apiRef.current.startCellEditMode({ id: params.id, field: params.field });
+          }
+        }}
+        onCellEditStop={(params) => {
+          setParameterData((prev) =>
+            prev.map((row) =>
+              row.pk_id === params.id ? { ...row, [params.field]: params.value } : row
+            )
+          );
+        }}
         sx={{
           [`& .${gridClasses.columnHeaders}`]: { backgroundColor: "#1d2a47ff", color: "#fff" },
           [`& .${gridClasses.columnHeader}`]: { backgroundColor: "#1d2a47ff", color: "#fff" },
@@ -231,4 +201,4 @@ const SystemParameter = () => {
   );
 };
 
-export default SystemParameter;
+export default SystemParamenter;

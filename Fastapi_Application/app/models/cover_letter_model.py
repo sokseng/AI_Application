@@ -11,4 +11,4 @@ class CoverLetter(Base):
     status = Column(Text, nullable=True)
     created_date = Column(Date, nullable=False, default=date.today())
     updated_date = Column(Date, nullable=False, default=date.today())
-    candidates = relationship("Candidate", back_populates="cover_letters")
+    candidate = relationship("Candidate", back_populates="cover_letters", passive_deletes=True)

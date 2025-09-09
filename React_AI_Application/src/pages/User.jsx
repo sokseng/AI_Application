@@ -46,10 +46,7 @@ const User = () => {
   const [userRightValue, setUserRightValue] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { showSnackbar } = useSnackbar();
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 25,
-  });
+  const [paginationModel, setPaginationModel] = useState({page: 0,pageSize: 25,});
   const togglePasswordVisibility = () => setShowPassword((show) => !show);
 
   const canAccessAddUser = userRights?.UserManagement?.UserRights?.CanAdd ?? false;
@@ -84,7 +81,8 @@ const User = () => {
   }, []);
 
   const handleDelete = useCallback(async () => {
-    if (selectedRows.length === 0) {
+    debugger
+    if (!selectedRows || selectedRows.length === 0) {
       showSnackbar("No rows selected for deletion!", "warning");
       return;
     }
@@ -109,26 +107,6 @@ const User = () => {
     setDialogOpen(true);
   }, []);
 
-  const initButtons = useCallback(() => {
-    const btns = [];
-
-    if (canAccessAddUser) {
-      btns.push({
-        label: "Add",
-        onClick: handleOpenSave,
-      });
-    }
-
-    if (canAccessDeleteUser) {
-      btns.push({
-        label: "Delete",
-        onClick: handleDelete,
-      });
-    }
-
-    return btns;
-  }, [canAccessAddUser, canAccessDeleteUser, handleOpenSave, handleDelete]);
-  
   const handleEdit = async (params) => {
     try {
       if (!canAccessEditUser) {
@@ -222,19 +200,19 @@ const User = () => {
       if (err.response && err.response.status === 400 && err.response.data.detail === "Email already exists") {
         showSnackbar("Email already exists!", "error");
         setErrors({ email: 'Email is required' });
-      } else if(err.response && err.response.status === 400 && err.response.data.detail === "password is too short"){
-        showSnackbar("Password must be greater than or equal to the minimum length defined in system settings","error");
-      }else if(err.response && err.response.status === 400 && err.response.data.detail === "password is too long"){
-        showSnackbar("Password must be less than or equal to the maximum length defined in system settings","error");
-      } else if(err.response && err.response.status === 400 && err.response.data.detail === "password special character"){
-        showSnackbar("Password must contain at least one special character defined in system settings","error");
-      }else if(err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one number"){
-        showSnackbar("Password must contain at least one number","error");
-      }else if(err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one uppercase letter"){
-        showSnackbar("Password must contain at least one uppercase character","error");
-      }else if(err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one lowercase letter"){
-        showSnackbar("Password must contain at least one lowercase character","error");
-      }else {
+      } else if (err.response && err.response.status === 400 && err.response.data.detail === "password is too short") {
+        showSnackbar("Password must be greater than or equal to the minimum length defined in system settings", "error");
+      } else if (err.response && err.response.status === 400 && err.response.data.detail === "password is too long") {
+        showSnackbar("Password must be less than or equal to the maximum length defined in system settings", "error");
+      } else if (err.response && err.response.status === 400 && err.response.data.detail === "password special character") {
+        showSnackbar("Password must contain at least one special character defined in system settings", "error");
+      } else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one number") {
+        showSnackbar("Password must contain at least one number", "error");
+      } else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one uppercase letter") {
+        showSnackbar("Password must contain at least one uppercase character", "error");
+      } else if (err.response && err.response.status === 400 && err.response.data.detail === "Password must contain at least one lowercase letter") {
+        showSnackbar("Password must contain at least one lowercase character", "error");
+      } else {
         showSnackbar("Failed to save user!", "error");
       }
     }
@@ -266,9 +244,24 @@ const User = () => {
   }, [fetchUserData, fetchUserRoleDropdown, fetchUserRightsDropdown]);
 
   useEffect(() => {
-    setButtons(initButtons());
-    return () => setButtons([]);
-  }, [setButtons, initButtons]);
+    const btns = [];
+
+    if (canAccessAddUser) {
+      btns.push({
+        label: "Add",
+        onClick: handleOpenSave,
+      });
+    }
+
+    if (canAccessDeleteUser) {
+      btns.push({
+        label: "Delete",
+        onClick: handleDelete,
+      });
+    }
+
+    setButtons(btns);
+  }, [setButtons, handleOpenSave, handleDelete, selectedRows, canAccessAddUser, canAccessDeleteUser]);
 
   // Map rightsData to DataGrid rows
   const rows = (userData || []).map((item) => ({
@@ -291,10 +284,14 @@ const User = () => {
         disableSelectionOnClick
         getRowId={(row) => row.pk_id}
         selectionModel={selectedRows}
-        onSelectionModelChange={(newSelection) => {
-          const numericSelection = newSelection.map(id => Number(id));
-          setSelectedRows(numericSelection);
-          console.log("Selected rows:", numericSelection);
+        onRowSelectionModelChange={(newSelection) => {
+          // newSelection is now an object with .ids Set
+          let selectionArray = [];
+          if (newSelection?.ids instanceof Set) {
+            selectionArray = Array.from(newSelection.ids).map(id => Number(id));
+          }
+          setSelectedRows(selectionArray);
+          console.log("Selected rows:", selectionArray);
           console.log(paginationModel);
         }}
         onRowDoubleClick={handleEdit}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from "react";
 import useUserStore from "../store/useUserStore";
 import axiosInstanceToken from "../utils/axiosInstanceToken";
@@ -27,6 +26,7 @@ const columns = [
     { field: "created_date", headerName: "Created date", flex: 1 },
     { field: "updated_date", headerName: "Updated date", flex: 1 },
 ];
+
 const CoverLetter = () => {
     const { userRights } = useUserStore();
     const { confirm } = useConfirm();
@@ -45,6 +45,7 @@ const CoverLetter = () => {
     const canAccessEditCV = userRights?.CoverLetterRights?.CanEdit ?? false;
     const canAccessDeleteCV = userRights?.CoverLetterRights?.CanDelete ?? false;
 
+    // Fetch candidate dropdown data
     const fetchCandidateData = useCallback(async () => {
         try {
             const response = await axiosInstanceToken.get("/cover_letter/candidate_dropdown");
@@ -52,8 +53,9 @@ const CoverLetter = () => {
         } catch (err) {
             console.log("Failed to fetch candidate data", err);
         }
-    },[]);
+    }, []);
 
+    // Fetch cover letter table data
     const fetchCoverLetterData = useCallback(async () => {
         try {
             const response = await axiosInstanceToken.get("/cover_letter");
@@ -63,14 +65,16 @@ const CoverLetter = () => {
         }
     }, []);
 
+    // Open dialog for adding
     const handleOpenSave = useCallback(() => {
         setFormData({ pk_id: null, fk_candidate: null, content: "" });
         setCandidateValue("");
         setDialogOpen(true);
     }, []);
 
+    // Delete selected rows
     const handleDelete = useCallback(async () => {
-        if (selectedRows.length === 0) {
+        if (!selectedRows || selectedRows.length === 0) {
             showSnackbar("No rows selected for deletion!", "warning");
             return;
         }
@@ -88,41 +92,32 @@ const CoverLetter = () => {
         });
     }, [selectedRows, confirm, fetchCoverLetterData, showSnackbar]);
 
-    const initButtons = useCallback(() => {
+    // Initialize BottomBar buttons
+    useEffect(() => {
         const btns = [];
-
         if (canAccessAddCV) {
-            btns.push({
-                label: "Add",
-                onClick: handleOpenSave,
-            });
+            btns.push({ label: "Add", onClick: handleOpenSave });
         }
-
         if (canAccessDeleteCV) {
-            btns.push({
-                label: "Delete",
-                onClick: handleDelete,
-            });
+            btns.push({ label: "Delete", onClick: handleDelete });
         }
+        setButtons(btns);
+        return () => setButtons([]);
+    }, [canAccessAddCV, canAccessDeleteCV, handleOpenSave, handleDelete, setButtons]);
 
-        return btns;
-    }, [canAccessAddCV, canAccessDeleteCV, handleOpenSave, handleDelete]);
-
-    
-
+    // Save (add/edit) cover letter
     const handleSave = async () => {
         try {
-            if (candidateValue === "" || candidateValue === undefined) {
+            if (!candidateValue) {
                 setErrors({ candidateValue: "Candidate is required" });
                 return;
             }
-            if (formData.content === "" || formData.content === undefined) {
+            if (!formData.content) {
                 setErrors({ content: "Content is required" });
                 return;
             }
 
-            const parsedCandidate = parseInt(candidateValue, 10);
-            const fk_candidate = isNaN(parsedCandidate) ? null : parsedCandidate;
+            const fk_candidate = parseInt(candidateValue, 10);
             const content = formData.content;
 
             await axiosInstanceToken.post("/cover_letter", {
@@ -137,67 +132,47 @@ const CoverLetter = () => {
             console.log("Failed to save cover letter", err);
             showSnackbar("Failed to save cover letter", "error");
         }
-    }
-    
+    };
+
+    // Edit a row
     const handleEdit = (params) => {
-        if(!canAccessEditCV) {
+        if (!canAccessEditCV) {
             showSnackbar("You don't have permission to edit cover letter", "info");
             return;
         }
-        try {
-            const rowData = params.row;
+        const rowData = params.row;
         if (!rowData || rowData.pk_id <= 0) return;
+
         setFormData({
             pk_id: rowData.pk_id,
             fk_candidate: rowData.fk_candidate,
             content: rowData.content
-        })
+        });
         setCandidateValue(rowData.fk_candidate);
         setDialogOpen(true);
-        }catch (err) {
-            console.error("Failed to edit", err);
-        }
     };
 
     const handleChangeCandidate = (event) => {
         setCandidateValue(event.target.value);
-
-        //clear only this field’s error
-        setErrors((prev) => ({
-            ...prev,
-            candidateValue: "",
-        }));
-    }
+        setErrors(prev => ({ ...prev, candidateValue: "" }));
+    };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;   //get field name + value
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-
-        //clear only this field’s error
-        setErrors((prev) => ({
-            ...prev,
-            [name]: "",
-        }));
-    }
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        setErrors(prev => ({ ...prev, [name]: "" }));
+    };
 
     useEffect(() => {
         fetchCoverLetterData();
         fetchCandidateData();
     }, [fetchCoverLetterData, fetchCandidateData]);
 
-    useEffect(() => {
-        setButtons(initButtons());
-        return () => setButtons([]);
-    }, [setButtons, initButtons]);
-
-    // Map rightsData to DataGrid rows
-    const rows = (coverLetterData || []).map((item) => ({
+    // Map data to DataGrid rows
+    const rows = coverLetterData.map(item => ({
         pk_id: item.pk_id,
         fk_candidate: item.fk_candidate,
-        candidate_name: item.first_name + " " + item.last_name,
+        candidate_name: `${item.first_name} ${item.last_name}`,
         content: item.content,
         created_date: item.created_date,
         updated_date: item.updated_date
@@ -212,10 +187,14 @@ const CoverLetter = () => {
                 disableSelectionOnClick
                 getRowId={(row) => row.pk_id}
                 selectionModel={selectedRows}
-                onSelectionModelChange={(newSelection) => {
-                    const numericSelection = newSelection.map(id => Number(id));
-                    setSelectedRows(numericSelection);
-                    console.log("Selected rows:", numericSelection);
+                onRowSelectionModelChange={(newSelection) => {
+                    // newSelection is now an object with .ids Set
+                    let selectionArray = [];
+                    if (newSelection?.ids instanceof Set) {
+                        selectionArray = Array.from(newSelection.ids).map(id => Number(id));
+                    }
+                    setSelectedRows(selectionArray);
+                    console.log("Selected rows:", selectionArray);
                     console.log(paginationModel);
                 }}
                 onRowDoubleClick={handleEdit}
@@ -233,21 +212,16 @@ const CoverLetter = () => {
                 }}
             />
 
-            {/* Add Right Dialog */}
             <Dialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
-                PaperProps={{
-                    sx: {
-                        width: 500,
-                        maxWidth: "90%",
-                    },
-                }}
+                PaperProps={{ sx: { width: 500, maxWidth: "90%" } }}
             >
-                <DialogTitle sx={{ fontWeight: "bold", height: 50 }}>{formData.pk_id ? "Edit Cover letter" : "Add Cover letter"}</DialogTitle>
+                <DialogTitle sx={{ fontWeight: "bold", height: 50 }}>
+                    {formData.pk_id ? "Edit Cover letter" : "Add Cover letter"}
+                </DialogTitle>
                 <DialogContent dividers sx={{ minHeight: 400 }}>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-
                         <FormControl
                             size="small"
                             variant="outlined"
@@ -285,7 +259,6 @@ const CoverLetter = () => {
                             onChange={handleChange}
                             error={!!errors.content}
                         />
-
                     </Box>
                 </DialogContent>
 
@@ -302,11 +275,7 @@ const CoverLetter = () => {
                     >
                         Cancel
                     </Button>
-                    <Button
-                        color="primary"
-                        variant="contained"
-                        onClick={handleSave}
-                    >
+                    <Button color="primary" variant="contained" onClick={handleSave}>
                         Save
                     </Button>
                 </DialogActions>
