@@ -6,6 +6,7 @@ import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { useBottomBar } from "../components/layout/BottomBarContext";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import { useConfirm } from "../components/shared/ConfirmContext";
+import { Add, Delete, Save, Close } from "@mui/icons-material";
 import {
     Button,
     Dialog,
@@ -96,10 +97,10 @@ const CoverLetter = () => {
     useEffect(() => {
         const btns = [];
         if (canAccessAddCV) {
-            btns.push({ label: "Add", onClick: handleOpenSave });
+            btns.push({ label: "Add", onClick: handleOpenSave, icon: <Add fontSize="small" /> });
         }
         if (canAccessDeleteCV) {
-            btns.push({ label: "Delete", onClick: handleDelete });
+            btns.push({ label: "Delete", onClick: handleDelete, icon: <Delete sx={{ fontSize: 16 }} /> });
         }
         setButtons(btns);
         return () => setButtons([]);
@@ -271,11 +272,23 @@ const CoverLetter = () => {
                             borderColor: "secondary.main",
                             borderRadius: 1,
                             textTransform: "none",
+                            fontSize: 12
                         }}
                     >
+                        <Close fontSize="small" />
                         Cancel
                     </Button>
-                    <Button color="primary" variant="contained" onClick={handleSave}>
+                    
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={handleSave}
+                        sx={{ 
+                            textTransform: "none",
+                            fontSize: 12 
+                        }}
+                    >
+                        {<Save sx={{ fontSize: 16 }} />}
                         Save
                     </Button>
                 </DialogActions>

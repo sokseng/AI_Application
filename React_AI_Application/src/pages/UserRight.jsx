@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Paper from "@mui/material/Paper";
 import useUserStore from "../store/useUserStore";
 import { useConfirm } from "../components/shared/ConfirmContext";
+import { Add, Delete, Save, Close } from "@mui/icons-material";
 import {
   Button,
   Dialog,
@@ -199,6 +200,7 @@ export default function Role() {
       btns.push({
         label: "Add",
         onClick: handleOpenSave,
+        icon: <Add fontSize="small" />,
       });
     }
 
@@ -206,6 +208,7 @@ export default function Role() {
       btns.push({
         label: "Delete",
         onClick: handleDelete,
+        icon: <Delete sx={{ fontSize: 16 }} />,
       });
     }
 
@@ -378,15 +381,23 @@ export default function Role() {
               borderColor: "secondary.main",
               borderRadius: 1,
               textTransform: "none",
+              fontSize: 12
             }}
           >
+            {<Close fontSize="small" />}
             Cancel
           </Button>
+
           <Button
             color="primary"
             variant="contained"
             onClick={handleSave}
+            sx={{ 
+              textTransform: "none",
+              fontSize: 12
+            }}
           >
+            {<Save sx={{ fontSize: 16}} />}
             Save
           </Button>
         </DialogActions>

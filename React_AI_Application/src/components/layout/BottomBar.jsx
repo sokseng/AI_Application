@@ -15,8 +15,16 @@ const BottomBar = ({ buttons = [] }) => {
     >
       <Stack direction="row" spacing={1}>
         {buttons.map((btn, i) => (
-          <Button key={i} variant={btn.variant || "contained"} size="small" onClick={btn.onClick}>
-            {btn.label}
+          <Button
+            key={i} variant={btn.variant || "contained"}
+            sx={{ textTransform: "none" }} size="small"
+            onClick={btn.onClick}
+
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              {btn.icon}
+              <span>{btn.label}</span>
+            </Box>
           </Button>
         ))}
       </Stack>

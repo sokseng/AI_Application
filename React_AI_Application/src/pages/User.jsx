@@ -8,6 +8,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import { useConfirm } from "../components/shared/ConfirmContext";
+import { Add, Block, Save, Close } from "@mui/icons-material";
 import {
   Button,
   Dialog,
@@ -88,7 +89,7 @@ const User = () => {
       return;
     }
 
-    confirm(`Are you sure you want to delete ${selectedRows.length} user(s)?`, async () => {
+    confirm(`Are you sure you want to Deactivate ${selectedRows.length} user(s)?`, async () => {
       try {
         await axiosInstanceToken.post("/user/delete", { ids: selectedRows });
         fetchUserData();
@@ -251,6 +252,7 @@ const User = () => {
       btns.push({
         label: "Add",
         onClick: handleOpenSave,
+        icon: <Add fontSize="small" />
       });
     }
 
@@ -258,6 +260,7 @@ const User = () => {
       btns.push({
         label: "Deactivate",
         onClick: handleDelete,
+        icon: <Block sx={{ fontSize: 16 }} />
       });
     }
 
@@ -456,15 +459,23 @@ const User = () => {
               borderColor: "secondary.main",
               borderRadius: 1,
               textTransform: "none",
+              fontSize: 12
             }}
           >
+            {<Close sx={{ fontSize: 16 }} />}
             Cancel
           </Button>
+
           <Button
             color="primary"
             variant="contained"
             onClick={handleSave}
+            sx={{ 
+              textTransform: "none", 
+              fontSize: 12
+            }}
           >
+            {<Save sx={{ fontSize: 16 }} />}
             Save
           </Button>
         </DialogActions>

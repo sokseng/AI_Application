@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import axiosInstanceToken from "../utils/axiosInstanceToken";
 import { useBottomBar } from "../components/layout/BottomBarContext";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
+import { Save } from "@mui/icons-material";
 
 const SystemParameter = () => {
   const { t } = useTranslation();
@@ -68,7 +69,7 @@ const SystemParameter = () => {
     }
   }, [parameterData, showSnackbar, fetchSystemParameter]);
 
-  const initButtons = useCallback(() => [{ label: "Save", onClick: handleSave }], [handleSave]);
+  const initButtons = useCallback(() => [{ label: "Save", onClick: handleSave, icon: <Save sx={{ fontSize: 16 }} /> }], [handleSave]);
 
   useEffect(() => {
     fetchSystemParameter();

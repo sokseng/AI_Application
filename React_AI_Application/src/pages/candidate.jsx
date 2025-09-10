@@ -9,6 +9,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useSnackbar } from "../../src/components/shared/SnackbarContext";
 import { useConfirm } from "../components/shared/ConfirmContext";
+import { Add, Delete, Save, Close } from "@mui/icons-material";
 import {
     Button,
     Dialog,
@@ -258,12 +259,13 @@ const Candidate = () => {
     useEffect(() => {
         const btns = [];
         if (canAccessCandidateAdd) {
-            btns.push({ label: "Add", onClick: handleOpenSave });
+            btns.push({ label: "Add", onClick: handleOpenSave, icon: <Add fontSize="small"/> });
         }
         if (canAccessCandidateDelete) {
             btns.push({
                 label: "Delete",
                 onClick: handleDelete,
+                icon: <Delete sx={{ fontSize: 16 }} />,
             });
         }
         setButtons(btns);
@@ -551,15 +553,22 @@ const Candidate = () => {
                             borderColor: "secondary.main",
                             borderRadius: 1,
                             textTransform: "none",
+                            fontSize: 12
                         }}
                     >
+                        <Close fontSize="small" />
                         Cancel
                     </Button>
                     <Button
                         color="primary"
                         variant="contained"
                         onClick={handleSave}
+                        sx={{ 
+                            textTransform: "none",
+                            fontSize: 12 
+                        }}
                     >
+                        {<Save sx={{ fontSize: 16 }} />}
                         Save
                     </Button>
                 </DialogActions>
